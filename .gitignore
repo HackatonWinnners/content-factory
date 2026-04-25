@@ -59,6 +59,7 @@ temp
 # Ralph
 .ralphex/progress
 .ralphex/worktrees
+.ralphex/*.log
 
 # Uploads / generated media
 uploads

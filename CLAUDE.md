@@ -236,6 +236,44 @@ Optional during dev:
 - New migration: edit `packages/db/src/schema/index.ts`, run `pnpm db:generate`
 - Open Studio: `pnpm db:studio`
 
+## Running ralphex
+
+`.ralphex/config` is set up for hackathon throughput:
+
+- **Executor**: Claude Code (`claude_command = claude`).
+- **External review**: codex enabled, model `gpt-5.4`, reasoning `high`,
+  sandbox `read-only`. Codex auth via ChatGPT login at `~/.codex/auth.json`
+  (verify with `codex login status`).
+- **Patience**: `review_patience = 3` so Claude/codex disagreements terminate.
+- **Timeouts**: session 45m, idle 5m. Rate-limit retry: 1h.
+- **Plans dir**: `docs/plans/`. Completed plans auto-move to
+  `docs/plans/completed/`.
+
+Run a single plan once:
+
+```bash
+ralphex docs/plans/01-design-system.md
+ralphex --serve docs/plans/01-design-system.md   # with web dashboard on :8080
+```
+
+Run the next pending plan in the directory (the wrapper at
+`scripts/ralph-next.sh` picks the lowest-numbered uncompleted plan and
+delegates to ralphex):
+
+```bash
+./scripts/ralph-next.sh
+```
+
+Hourly cron — keeps progressing through plans until everything is in
+`completed/`:
+
+```cron
+0 * * * * cd /Users/madvil2/Projects/content-factory && ./scripts/ralph-next.sh >> .ralphex/cron.log 2>&1
+```
+
+Resumability: re-running the same command picks up at the next unchecked
+`- [ ]` task. No need to clear `.ralphex/progress/`.
+
 ## Ralph + Entire integration
 
 This repo uses Entire CLI to capture AI agent sessions on every commit.

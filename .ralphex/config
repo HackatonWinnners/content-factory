@@ -327,11 +327,31 @@
 # ==============================================================================
 
 claude_command = claude
-external_review_tool = none
+
+# Codex external review enabled — uses ChatGPT login at ~/.codex/auth.json.
+# read-only sandbox is fine: it restricts filesystem writes but not OpenAI network.
+# Drop reasoning_effort to "high" if review is too slow at xhigh.
+external_review_tool = codex
+codex_command = codex
+codex_model = gpt-5.4
+codex_reasoning_effort = high
+codex_sandbox = read-only
+codex_timeout_ms = 1800000
+
+# Avoid endless review loops when Claude and codex disagree.
+review_patience = 3
+
 finalize_enabled = false
 task_retry_count = 1
-max_iterations = 30
-session_timeout = 30m
+
+# Bumped to 50 to leave headroom; cron picks up where it stopped.
+max_iterations = 50
+
+# Session limits — survive a hung tool call without burning the whole hour.
+session_timeout = 45m
 idle_timeout = 5m
-wait_on_limit = 30m
+
+# In-process retry on rate limit (separate from cron interval).
+wait_on_limit = 1h
+
 plans_dir = docs/plans

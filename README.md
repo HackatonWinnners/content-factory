@@ -1,101 +1,158 @@
-# content-factory
+# Content Factory
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Hono, and more.
+> Drop a GitHub repo, Linear export, or PDF. Get a 30-second on-brand video back.
 
-## Features
+Content Factory turns any source into a vertical or horizontal short-form video
+with AI voiceover. Define your brand once, then aim it at a changelog, a launch
+ticket, or a whitepaper — the agent picks what matters, writes a hook, composes
+scenes, voices it in your cloned voice, and renders an MP4.
 
-- **TypeScript** - For type safety and improved developer experience
-- **Next.js** - Full-stack React framework
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **Node.js** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Turborepo** - Optimized monorepo build system
-- **Biome** - Linting and formatting
+Built for the **AI Hackathon** (Berlin, April 2026).
 
-## Getting Started
+---
 
-First, install the dependencies:
+## The pipeline
+
+```
+source        →   user-facing facts   →   market context   →   editorial
+(GitHub/         (Pioneer GLiNER2)       (Tavily search)       (Gemini 2.5)
+ Linear/PDF)
+                                                                    ↓
+output       ←   composition       ←   voiceover        ←   script + scenes
+(MP4 9:16        (Remotion)            (Gradium voice         (Gemini)
+ or 16:9)                                clone)
+```
+
+Every commit and AI session is captured by **Entire** so the agent's reasoning
+becomes part of the artifact, not just the artifact's history.
+
+---
+
+## Stack
+
+| Layer        | Tech                                                        |
+| ------------ | ----------------------------------------------------------- |
+| Web          | Next.js 16, React 19, Tailwind 4, shadcn/ui                 |
+| API          | Hono on `@hono/node-server`, Node 22+                       |
+| LLM          | Vercel AI SDK + `@ai-sdk/google` (`gemini-2.5-flash`)       |
+| Search       | Tavily REST                                                 |
+| Extraction   | Pioneer / Fastino (GLiNER2)                                 |
+| Voice        | Gradium (TTS + voice cloning)                               |
+| Video gen    | Hera REST                                                   |
+| Composer     | Remotion 4                                                  |
+| Persistence  | PostgreSQL 16, Drizzle ORM                                  |
+| Validation   | Zod 4 at all external boundaries                            |
+| Build        | pnpm 10 workspaces, Turborepo, Biome 2, TypeScript strict   |
+| Session capture | Entire CLI (post-commit hook)                            |
+| Security     | Aikido (final scan before submit)                           |
+
+**Three+ partner technologies used**: Google Gemini, Tavily, Pioneer, Hera,
+Gradium, Aikido, Entire.
+
+---
+
+## Design
+
+The UI was prototyped in [claude.ai/design](https://claude.ai/design) — a dark,
+magenta-accented, Linear-density visual system. Four screens drive the flow:
+
+1. **Brand Setup** (`/brand-setup`) — define voice, paste examples, tune tone sliders
+2. **Source Input** (`/source`) — pick repo/ticket/PDF, see filtered commits, set format
+3. **Agent Thinking** (`/thinking`) — watch the agent reason live, 8 decisions, streaming script
+4. **Result** (`/result`) — finished video, decision recap, voice picker, regenerate options
+
+The handoff bundle lives at [`docs/design/hack/`](docs/design/hack/). Read it
+top-to-bottom — `tokens.css`, four `.html` prototypes, four `.jsx` components,
+and the designer's intent in `chats/chat1.md`.
+
+---
+
+## Build process
+
+This repo is itself an experiment in agent-driven development:
+
+- The plan files in [`docs/plans/`](docs/plans/) are executed by
+  [**ralphex**](https://ralphex.com), which spawns Claude Code per task and
+  Codex for external review.
+- [**Entire**](https://entire.io) captures every Claude Code session as a
+  searchable record attached to the commit it produced.
+- [**Aikido**](https://aikido.dev) scans the result before submission.
+
+Every commit on this branch has its full agent reasoning attached.
+
+---
+
+## Run it locally
 
 ```bash
+# 1. Prereqs: Node 22+, pnpm 10+, Docker
+node --version && pnpm --version && docker --version
+
+# 2. Install
 pnpm install
+
+# 3. Env
+cp .env.example .env
+# fill in: GEMINI_API_KEY, TAVILY_API_KEY, HERA_API_KEY, PIONEER_API_KEY, GRADIUM_API_KEY
+
+# 4. Database
+pnpm db:start    # docker compose up postgres
+pnpm db:push     # apply schema
+
+# 5. Dev
+pnpm dev         # web on :3001, api on :3000
 ```
 
-## Database Setup
+Open [http://localhost:3001](http://localhost:3001).
 
-This project uses PostgreSQL with Drizzle ORM.
+---
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+## Project layout
 
-3. Apply the schema to your database:
+```
+apps/
+  web/          Next.js 16 — the four design screens (port 3001)
+  server/       Hono — pipeline orchestration (port 3000)
+packages/
+  agent/        Editorial pipeline: Gemini, Tavily, Pioneer
+  composer/     Remotion compositions + programmatic render API
+  db/           Drizzle schema, migrations, docker-compose
+  env/          T3-style typed env loaders (server / web)
+  ui/           Shared shadcn/ui primitives
+  config/       Shared tsconfig.base.json
+docs/
+  design/       Handoff bundle from claude.ai/design
+  plans/        ralphex plan files (00-foundation through 05-result)
+.codex/         Codex CLI hooks + MCP servers
+.entire/        Entire session capture config
+.ralphex/       ralphex local config (sandbox: read-only codex review)
+```
+
+---
+
+## Scripts
+
+| Command              | Description                            |
+| -------------------- | -------------------------------------- |
+| `pnpm dev`           | Run web + server in watch mode         |
+| `pnpm dev:web`       | Web only                               |
+| `pnpm dev:server`    | API only                               |
+| `pnpm build`         | Production build of everything         |
+| `pnpm lint`          | Biome check (no fixes)                 |
+| `pnpm check`         | Biome check + auto-fix                 |
+| `pnpm check-types`   | TypeScript across the workspace        |
+| `pnpm db:start`      | Bring Postgres up (docker compose)     |
+| `pnpm db:push`       | Apply Drizzle schema                   |
+| `pnpm db:studio`     | Open Drizzle Studio                    |
+
+Composer-specific:
 
 ```bash
-pnpm run db:push
+pnpm -F @content-factory/composer studio   # Remotion Studio for previewing
 ```
 
-Then, run the development server:
+---
 
-```bash
-pnpm run dev
-```
+## License
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@content-factory/ui/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Git Hooks and Formatting
-
-- Format and lint fix: `pnpm run check`
-
-## Project Structure
-
-```
-content-factory/
-├── apps/
-│   ├── web/         # Frontend application (Next.js)
-│   └── server/      # Backend API (Hono)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   └── db/          # Database schema & queries
-```
-
-## Available Scripts
-
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
-- `pnpm run check`: Run Biome formatting and linting
+Hackathon-only. Not for redistribution.
