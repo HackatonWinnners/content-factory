@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "039e2a814c02",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "scripts/ralph-plan-only.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/03/9e2a814c02/0/metadata.json",
+      "transcript": "/03/9e2a814c02/0/full.jsonl",
+      "content_hash": "/03/9e2a814c02/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
