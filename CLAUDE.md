@@ -257,15 +257,26 @@ ralphex --serve docs/plans/01-design-system.md   # with web dashboard on :8080
 ```
 
 Run the next pending plan in the directory (the wrapper at
-`scripts/ralph-next.sh` picks the lowest-numbered uncompleted plan and
-delegates to ralphex):
+`scripts/ralph-next.sh` picks the lowest-numbered uncompleted plan, refuses
+to overlap with another running ralphex, and delegates):
 
 ```bash
 ./scripts/ralph-next.sh
+./scripts/ralph-next.sh --serve   # + dashboard on :8080
+```
+
+Run **all** pending plans sequentially until everything is in `completed/`
+(use this for "kick off and walk away"):
+
+```bash
+./scripts/ralph-loop.sh
+caffeinate -is ./scripts/ralph-loop.sh   # macOS: prevent sleep during overnight run
+nohup ./scripts/ralph-loop.sh >> .ralphex/loop.log 2>&1 &   # detach
 ```
 
 Hourly cron — keeps progressing through plans until everything is in
-`completed/`:
+`completed/`. Combine with `wait_on_limit = 1h` in config to survive rate
+limits:
 
 ```cron
 0 * * * * cd /Users/madvil2/Projects/content-factory && ./scripts/ralph-next.sh >> .ralphex/cron.log 2>&1
