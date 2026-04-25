@@ -67,3 +67,7 @@ test-results
 
 # Playwright self-test artifacts from Ralph
 .screenshots
+.playwright-mcp
+
+# AI SDK devtools generations
+.devtools
