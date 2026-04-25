@@ -1,0 +1,39 @@
+{
+	"name": "content-factory",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"type": "module",
+	"scripts": {
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"dev:web": "turbo -F web dev",
+		"dev:server": "turbo -F server dev",
+		"db:push": "turbo -F @content-factory/db db:push",
+		"db:studio": "turbo -F @content-factory/db db:studio",
+		"db:generate": "turbo -F @content-factory/db db:generate",
+		"db:migrate": "turbo -F @content-factory/db db:migrate",
+		"db:start": "turbo -F @content-factory/db db:start",
+		"db:watch": "turbo -F @content-factory/db db:watch",
+		"db:stop": "turbo -F @content-factory/db db:stop",
+		"db:down": "turbo -F @content-factory/db db:down",
+		"check": "biome check --write .",
+		"lint": "biome check ."
+	},
+	"dependencies": {
+		"@content-factory/env": "workspace:*",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.0",
+		"@content-factory/config": "workspace:*",
+		"@types/node": "^22.13.14",
+		"turbo": "^2.8.12",
+		"typescript": "catalog:"
+	},
+	"packageManager": "pnpm@10.33.0"
+}
