@@ -102,6 +102,62 @@ pnpm dlx shadcn@latest add <component>
 - Logs: `console.log` with structured JSON for now. No logger library.
 - Indent: **tab**. Quotes: **double**. Don't argue with Biome.
 
+## Plugins and skills auto-loaded in this session
+
+User-level plugins (enabled in `~/.claude/settings.json`) and project-level skills
+(in `.agents/skills/` and `.claude/skills/` from Better-T-Stack) are loaded
+automatically. Examples: `next-best-practices`, `hono`, `shadcn`, `ai-sdk`,
+`turborepo`, `vercel-react-best-practices`, `frontend-design`, `superpowers:*`.
+
+When a task touches a covered area, invoke the matching skill via the `Skill`
+tool BEFORE writing code. For example:
+- Writing Next.js code → invoke `next-best-practices`.
+- Adding a Hono route → invoke `hono`.
+- Designing a UI component → invoke `frontend-design` and `shadcn`.
+- Working on the AI SDK pipeline → invoke `ai-sdk`.
+
+If a project-level skill conflicts with a rule in this CLAUDE.md, this file wins.
+
+## MCP tools available in this session
+
+You (the agent running tasks) have access to the following MCP servers. Use them
+proactively — they exist to save you time and reduce hallucination.
+
+- **Playwright** (`mcp__plugin_playwright_playwright__*`) — drive a real browser.
+  Use to verify any change to `apps/web` actually renders correctly.
+  Key tools: `browser_navigate`, `browser_snapshot` (DOM tree, NOT a screenshot —
+  prefer this to verify content), `browser_take_screenshot` (visual proof for
+  the user), `browser_click`, `browser_type`, `browser_console_messages`,
+  `browser_network_requests`, `browser_close`.
+- **Context7** (`mcp__context7__*`) — fetch live docs for any library.
+  Use BEFORE writing code against an API you're unsure about, especially for
+  Next.js 16, React 19, Tailwind 4, Hono, AI SDK v6, Drizzle, Remotion.
+  Flow: `resolve-library-id "next.js"` → `query-docs <libId> "App Router metadata"`.
+- **shadcn** (`mcp__shadcn__*`) — add, search, audit shadcn components.
+  Use `search_items_in_registries` before guessing prop names.
+  Use `get_add_command_for_items` instead of recalling the install CLI from memory.
+- **Linear / Notion / Drive / Amplitude** — only if a task explicitly references them.
+
+## UI verification workflow with Playwright
+
+When a task touches `apps/web`, verify with Playwright before marking complete:
+
+1. Make sure dev server is up. From repo root, in a separate shell:
+   `pnpm -F web dev`
+   It binds to `http://localhost:3001`. If the port is busy, kill the previous
+   process first; do not invent a new port.
+2. Wait for "Ready" line in the dev server output (usually 3–6 seconds).
+3. Use `browser_navigate` to `http://localhost:3001/<route>`.
+4. Use `browser_snapshot` to read the rendered DOM and assert the expected text /
+   elements are present.
+5. If the change is visual (layout, colors, shadcn component), also call
+   `browser_take_screenshot` and reference the file in your task output for the
+   reviewer to inspect.
+6. Use `browser_console_messages` to confirm no React/hydration errors.
+
+If `pnpm -F web build` fails, fix the build first. There is no point validating a
+broken build in a browser.
+
 ## Validation commands — must be green after every task
 
 Run from repo root:

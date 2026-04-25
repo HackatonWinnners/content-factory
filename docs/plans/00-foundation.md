@@ -110,6 +110,16 @@ ready for feature plans, web shows our brand instead of Better-T placeholder.
 - [ ] Edit `apps/web/src/components/header.tsx` to display "Content Factory" as the
   logo text instead of the existing placeholder. Keep the existing mode-toggle.
 - [ ] Confirm `pnpm -F web build` is green.
+- [ ] **Playwright self-test**: start dev server in background
+  (`pnpm -F web dev` via Bash with `run_in_background: true`), wait until the
+  output contains "Ready" or `localhost:3001`, then with the Playwright MCP:
+  - `browser_navigate` to `http://localhost:3001/`
+  - `browser_snapshot` and assert the DOM contains "Content Factory" and both
+    "Set up your brand" and "Generate a video" Card titles.
+  - `browser_console_messages` and confirm no errors (warnings are fine).
+  - `browser_take_screenshot` and save to `.screenshots/landing.png`.
+  - Kill the dev server (`pkill -f 'next dev' || true`).
+  Record a one-line note in the task output describing what was verified.
 - [ ] Mark complete.
 
 ### Task 5: Wire env access from agent package

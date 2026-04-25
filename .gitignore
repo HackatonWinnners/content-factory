@@ -53,6 +53,9 @@ temp
 # Next.js
 .next
 
+# Per-user Claude settings
+.claude/settings.local.json
+
 # Ralph
 .ralphex/progress
 .ralphex/worktrees
@@ -61,3 +64,6 @@ temp
 uploads
 playwright-report
 test-results
+
+# Playwright self-test artifacts from Ralph
+.screenshots
