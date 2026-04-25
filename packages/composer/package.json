@@ -1,0 +1,30 @@
+{
+	"name": "@content-factory/composer",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/render.ts",
+		"./root": "./src/index.ts"
+	},
+	"scripts": {
+		"studio": "remotion studio src/index.ts",
+		"render": "remotion render src/index.ts",
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@remotion/bundler": "^4.0.380",
+		"@remotion/cli": "^4.0.380",
+		"@remotion/renderer": "^4.0.380",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"remotion": "^4.0.380",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@content-factory/config": "workspace:*",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"typescript": "catalog:"
+	}
+}

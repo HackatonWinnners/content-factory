@@ -42,8 +42,30 @@ This repo was scaffolded by Better-T-Stack. Respect the existing structure.
   `packages/env/src/{server,web}.ts`. Catalog deps from `pnpm-workspace.yaml`.
 - Linter/formatter: **Biome 2.4** with **tab** indentation and **double** quotes.
   See `biome.json`. Single tool, no ESLint, no Prettier.
-- Video composer: **Remotion** — to be added in `packages/composer`.
+- Video composer: **Remotion 4** in `packages/composer/`.
+  Entry `src/index.ts` calls `registerRoot(RemotionRoot)`.
+  Compositions live in `src/compositions/`. Each composition exports both
+  the React component and a Zod schema for its props.
+  Programmatic render API: `import { renderVideo } from "@content-factory/composer"`
+  (see `packages/composer/src/render.ts`). Remotion Studio: `pnpm -F @content-factory/composer studio`.
 - Tests: **Vitest** for unit tests when needed. **Playwright** for E2E (later).
+
+## External integrations — transport reference
+
+Each third-party service has a single canonical way to talk to it from this
+codebase. Do not invent a different transport; do not bolt on an MCP server
+when the table says "REST".
+
+| Service       | Transport in our code              | Notes                                                                |
+| ------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| Google Gemini | AI SDK (`@ai-sdk/google`)          | Streaming via `streamText`. Already wired in server.                 |
+| Tavily        | REST via `fetch` (no extra dep)    | Official `tavily-mcp` exists but only for agent tooling, not runtime |
+| Hera          | REST via `fetch`                   | No SDK, no MCP. `x-api-key` header. See docs.hera.video               |
+| Gradium       | REST via `fetch`                   | No SDK, no MCP. Voice cloning + TTS                                  |
+| Pioneer       | REST via `fetch` (Fastino API)     | No SDK, no MCP. Use `PIONEER_API_KEY`                                |
+| Entire        | CLI hooks (already installed)      | Captures sessions per commit. No SDK, no MCP                         |
+| Aikido        | Final scan via web UI before submit| `@aikidosec/mcp` exists for dev tooling but not used at runtime      |
+| Lovable       | n/a                                | Lovable was for prototyping the Better-T scaffold; not a runtime dep |
 
 ## Workspace layout
 
@@ -56,7 +78,7 @@ packages/
   env/        T3 env loaders (server.ts, web.ts)
   db/         Drizzle schema + migrations + docker-compose.yml
   ui/         shadcn/ui components shared between web and server
-  composer/   Remotion project (TO ADD)
+  composer/   Remotion project — compositions + programmatic render API
   agent/      Editorial pipeline: Gemini calls, Tavily, Pioneer (TO ADD)
 docs/
   plans/      Ralph plan files
