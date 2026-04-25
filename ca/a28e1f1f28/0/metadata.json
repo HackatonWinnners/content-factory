@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "caa28e1f1f28",
+  "session_id": "6b8ae584-ea9c-42e8-81b8-fc7283851ae0",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-25T23:31:15.622745Z",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/web/src/lib/brand-profile.ts",
+    "apps/web/src/app/page.tsx",
+    "docs/plans/2026-04-26-hackathon-mvp.md"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "0f3232ae0c20",
+  "token_usage": {
+    "input_tokens": 85,
+    "cache_creation_tokens": 185711,
+    "cache_read_tokens": 5324244,
+    "output_tokens": 15775,
+    "api_call_count": 70
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-25T23:31:15.597442Z",
+    "agent_lines": 97,
+    "agent_removed": 25,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 97,
+    "total_lines_changed": 122,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
