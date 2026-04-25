@@ -53,11 +53,11 @@ Dependencies (no new top-level deps):
 **Files:**
 - Modify: `apps/web/src/index.css`
 
-- [ ] After existing `@import "@content-factory/ui/globals.css"` add `@theme inline { ... }` block exposing the tokens from `docs/design/hack/project/tokens.css` as Tailwind 4 design tokens: `--color-bg`, `--color-elev-1`, `--color-elev-2`, `--color-border`, `--color-border-soft`, `--color-border-strong`, `--color-text`, `--color-text-muted`, `--color-text-dim`, `--color-magenta`, `--color-magenta-soft`, `--color-magenta-bg`, `--color-green`, `--color-amber`, `--color-red`. Map `--color-background → --color-bg`, `--color-foreground → --color-text`, `--color-ring → --color-magenta`.
-- [ ] Override shadcn theme variables in `:root` and `.dark` so the app is permanently dark — set `--background`, `--foreground`, `--border`, `--ring`, `--card`, `--card-foreground`, `--input`, `--popover`, `--popover-foreground`, `--muted`, `--muted-foreground` to the design tokens.
-- [ ] Add a `body { background: var(--color-bg); color: var(--color-text); }` rule.
-- [ ] Add a utility class `.mono { font-family: var(--font-mono); }` for mono labels matching the design.
-- [ ] Verify: `pnpm -F web dev`, navigate `/`, screenshot to `.screenshots/01-tokens.png`, confirm bg is `#0A0A0B` and `body` text is light. `pnpm lint && pnpm check-types && pnpm -F web build` green.
+- [x] After existing `@import "@content-factory/ui/globals.css"` add `@theme inline { ... }` block exposing the tokens from `docs/design/hack/project/tokens.css` as Tailwind 4 design tokens: `--color-bg`, `--color-elev-1`, `--color-elev-2`, `--color-border`, `--color-border-soft`, `--color-border-strong`, `--color-text`, `--color-text-muted`, `--color-text-dim`, `--color-magenta`, `--color-magenta-soft`, `--color-magenta-bg`, `--color-green`, `--color-amber`, `--color-red`. Map `--color-background → --color-bg`, `--color-foreground → --color-text`, `--color-ring → --color-magenta`.
+- [x] Override shadcn theme variables in `:root` and `.dark` so the app is permanently dark — set `--background`, `--foreground`, `--border`, `--ring`, `--card`, `--card-foreground`, `--input`, `--popover`, `--popover-foreground`, `--muted`, `--muted-foreground` to the design tokens.
+- [x] Add a `body { background: var(--color-bg); color: var(--color-text); }` rule.
+- [x] Add a utility class `.mono { font-family: var(--font-mono); }` for mono labels matching the design.
+- [x] Verify: `pnpm -F web dev`, navigate `/`, screenshot to `.screenshots/01-tokens.png`, confirm bg is `#0A0A0B` and `body` text is light. `pnpm lint && pnpm check-types && pnpm -F web build` green.
 
 ### Task 2: Header + ScreenShell + OnboardingStrip components
 
