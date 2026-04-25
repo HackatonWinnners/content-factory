@@ -1,0 +1,46 @@
+/* Content Factory — shared design tokens (used by all screens) */
+:root {
+  --bg: #0A0A0B;
+  --elev-1: #111113;
+  --elev-2: #16161A;
+  --border: rgba(255,255,255,0.08);
+  --border-soft: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.14);
+  --text: #ECECEE;
+  --text-muted: #8A8A93;
+  --text-dim: #5C5C66;
+  --magenta: #E5267C;
+  --magenta-soft: rgba(229, 38, 124, 0.14);
+  --magenta-bg: rgba(229, 38, 124, 0.08);
+  --green: #2D6A4F;
+  --amber: #8B6B1F;
+  --red: #7A2E2E;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+button { font-family: inherit; cursor: pointer; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.lucide {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}

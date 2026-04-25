@@ -124,6 +124,44 @@ pnpm dlx shadcn@latest add <component>
 - Logs: `console.log` with structured JSON for now. No logger library.
 - Indent: **tab**. Quotes: **double**. Don't argue with Biome.
 
+## Design system
+
+The visual design lives in `docs/design/hack/` — a handoff bundle from
+claude.ai/design containing four screens (Brand Setup, Source Input, Agent
+Thinking, Result) as HTML/CSS/JS prototypes plus a shared `tokens.css`.
+
+- `docs/design/hack/README.md` — designer's handoff instructions
+- `docs/design/hack/chats/chat1.md` — designer's intent and iteration trail
+- `docs/design/hack/project/tokens.css` — color palette + typography
+- `docs/design/hack/project/*.html` — canonical CSS for each screen
+- `docs/design/hack/project/*.jsx` — React structure + sample data
+
+When implementing a screen, **read its HTML and JSX top-to-bottom first**.
+Do not screenshot the prototypes — every dimension, color, and rule is in
+the source. Match the visual output exactly; do not copy the prototype's
+internal structure (window globals, inline `<script type="text/babel">`)
+unless it happens to fit our React/Next.js architecture.
+
+The design is fixed-width 1440px desktop. Use `mx-auto w-[1440px]` and do not
+introduce responsive breakpoints — the hackathon target is desktop only.
+
+## Plan execution order
+
+Plans live in `docs/plans/`. Execute in order; each plan ends with the
+validation commands green.
+
+1. `00-foundation.md` — backend foundation (DB schema, agent package, route
+   restructure). **Optional/deferrable**: design plans 01–05 do not depend
+   on this. Run when backend wiring begins.
+2. `01-design-system.md` — design tokens, app shell, route stubs.
+3. `02-screen-brand-setup.md` — `/brand-setup` page.
+4. `03-screen-source-input.md` — `/source` page.
+5. `04-screen-agent-thinking.md` — `/thinking` page.
+6. `05-screen-result.md` — `/result` page.
+
+For the hackathon demo, run 01 → 02 → 03 → 04 → 05 first (the visual surface),
+then 00 + later plans for backend wiring.
+
 ## Plugins and skills auto-loaded in this session
 
 User-level plugins (enabled in `~/.claude/settings.json`) and project-level skills
