@@ -81,6 +81,9 @@ importers:
       '@ai-sdk/google':
         specifier: ^3.0.1
         version: 3.0.64(zod@4.3.6)
+      '@content-factory/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
       '@content-factory/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -182,6 +185,31 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.2.4
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/agent:
+    dependencies:
+      '@ai-sdk/google':
+        specifier: ^3.0.1
+        version: 3.0.64(zod@4.3.6)
+      '@content-factory/env':
+        specifier: workspace:*
+        version: link:../env
+      ai:
+        specifier: 'catalog:'
+        version: 6.0.168(zod@4.3.6)
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.6
+    devDependencies:
+      '@content-factory/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.13.14
+        version: 22.19.17
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

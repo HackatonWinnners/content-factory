@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@ai-sdk/devtools": "^0.0.2",
 		"@ai-sdk/google": "^3.0.1",
+		"@content-factory/agent": "workspace:*",
 		"@content-factory/db": "workspace:*",
 		"@content-factory/env": "workspace:*",
 		"@hono/node-server": "^1.14.4",

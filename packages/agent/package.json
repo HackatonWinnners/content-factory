@@ -1,0 +1,23 @@
+{
+	"name": "@content-factory/agent",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@ai-sdk/google": "^3.0.1",
+		"@content-factory/env": "workspace:*",
+		"ai": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@content-factory/config": "workspace:*",
+		"@types/node": "^22.13.14",
+		"typescript": "catalog:"
+	}
+}
