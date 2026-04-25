@@ -13,6 +13,10 @@
 
 set -euo pipefail
 
+export HOME="${HOME:-/Users/madvil2}"
+export USER="${USER:-$(id -un)}"
+export PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/v24.14.1/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 cd "$(dirname "$0")/.."
 
 PLANS_DIR="docs/plans"
@@ -32,7 +36,7 @@ while :; do
 	fi
 
 	echo "[$(ts)] === Starting plan: $NEXT_PLAN ==="
-	if ! ralphex "${EXTRA_ARGS[@]}" "$NEXT_PLAN"; then
+	if ! ralphex ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} "$NEXT_PLAN"; then
 		ec=$?
 		echo "[$(ts)] !! ralphex exited with $ec on $NEXT_PLAN. Stopping loop."
 		exit "$ec"

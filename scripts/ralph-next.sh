@@ -12,6 +12,12 @@
 
 set -euo pipefail
 
+# Cron has a minimal PATH and no HOME guarantees. Make sure ralphex / claude /
+# codex / node / pnpm are findable regardless of how this script is launched.
+export HOME="${HOME:-/Users/madvil2}"
+export USER="${USER:-$(id -un)}"
+export PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/v24.14.1/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 cd "$(dirname "$0")/.."
 
 PLANS_DIR="docs/plans"
@@ -40,4 +46,4 @@ if [[ -z "$NEXT_PLAN" ]]; then
 fi
 
 echo "[$(ts)] Running plan: $NEXT_PLAN"
-exec ralphex "${EXTRA_ARGS[@]}" "$NEXT_PLAN"
+exec ralphex ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} "$NEXT_PLAN"
