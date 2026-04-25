@@ -249,20 +249,19 @@ Optional during dev:
 - **Plans dir**: `docs/plans/`. Completed plans auto-move to
   `docs/plans/completed/`.
 
-Run a single plan once:
+Run a plan:
 
 ```bash
-ralphex docs/plans/<plan>.md
-ralphex --serve docs/plans/<plan>.md   # with web dashboard on :8080
+ralphex --wait 1h --serve docs/plans/<plan>.md
 ```
 
-Run **all** pending plans sequentially until everything is in `completed/`
-(use this for "kick off and walk away" overnight runs):
+Overnight (mac stays awake, terminal can close):
 
 ```bash
-caffeinate -is ./scripts/ralph-loop.sh --serve   # foreground, mac stays awake
-nohup caffeinate -is ./scripts/ralph-loop.sh --serve >> .ralphex/loop.log 2>&1 &
-disown                                            # detach so closing terminal doesn't kill
+nohup caffeinate -is ralphex --wait 1h --serve docs/plans/<plan>.md \
+  > .ralphex/run.log 2>&1 &
+disown
+tail -f .ralphex/run.log
 ```
 
 Resumability: re-running the same command picks up at the next unchecked
