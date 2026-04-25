@@ -341,7 +341,7 @@ codex_timeout_ms = 1800000
 # Avoid endless review loops when Claude and codex disagree.
 review_patience = 3
 
-finalize_enabled = false
+finalize_enabled = true
 task_retry_count = 1
 
 # Bumped to 50 to leave headroom; cron picks up where it stopped.

@@ -1,38 +1,40 @@
 # finalize prompt
-# this prompt runs once after successful reviews, best-effort (failures logged but don't block)
-# disabled by default (finalize_enabled = false)
+# runs once after successful reviews, best-effort (failures logged but don't block)
 #
 # available variables:
 #   {{DEFAULT_BRANCH}} - default branch name (main, master, trunk, etc.)
 
-# Post-completion finalize step.
+Post-completion finalize step. The goal: rebase the feature branch onto the latest
+{{DEFAULT_BRANCH}}, merge it into {{DEFAULT_BRANCH}}, and push, so the next plan's
+branch will pick up this plan's work.
 
-# Rebase your commits onto the latest {{DEFAULT_BRANCH}} and organize them for merge.
+Steps:
 
-# Steps:
+1. Fetch latest: git fetch origin
 
-# 1. Fetch latest changes: `git fetch origin`
+2. Rebase the current feature branch onto origin/{{DEFAULT_BRANCH}}:
+   - git rebase origin/{{DEFAULT_BRANCH}}
+   - If conflicts: resolve them, git add, git rebase --continue.
+   - If rebase totally fails: git rebase --abort and stop. Report the issue and DO NOT proceed to step 3.
 
-# 2. Rebase onto {{DEFAULT_BRANCH}}:
-#    - Run: `git rebase origin/{{DEFAULT_BRANCH}}`
-#    - If conflicts occur, resolve them and continue rebase
-#    - If rebase fails completely, abort with `git rebase --abort` and report the issue
+3. Skip interactive squashing. Keep commits as-is. We want the per-task history.
 
-# 3. Review commit history:
-#    - Run: `git log origin/{{DEFAULT_BRANCH}}..HEAD --oneline`
-#    - If there are many small fix commits, consider squashing them
-#    - Keep meaningful commit boundaries (feature commits separate from fix commits)
+4. Verify the branch is ready by running the validation commands from the plan file
+   you just finished (or the ones in CLAUDE.md). If they fail, stop here and report.
 
-# 4. Optional: Interactive rebase to clean up history:
-#    - Only if there are 5+ commits that could be logically combined
-#    - Run: `git rebase -i origin/{{DEFAULT_BRANCH}}`
-#    - Squash related fix commits into their parent feature commits
-#    - Reword commit messages if needed for clarity
+5. Fast-forward {{DEFAULT_BRANCH}} to this branch and push:
+   - git checkout {{DEFAULT_BRANCH}}
+   - git merge --ff-only <feature-branch>
+   - git push origin {{DEFAULT_BRANCH}}
+   If the fast-forward fails (because {{DEFAULT_BRANCH}} moved ahead concurrently),
+   redo step 2 against the new tip and retry step 5 once. If it still fails, stop
+   and report.
 
-# 5. Verify the branch is ready:
-#    - Run tests using the project's test command (check CLAUDE.md or plan file for the correct command)
-#    - Run linter if applicable
+6. Push the feature branch too so it stays visible on the remote:
+   - git push origin <feature-branch>
 
-# Report what was done. This step is best-effort - if rebase fails, explain why and the branch remains as-is.
+Report what was done. Best-effort: if any step fails, leave things as-is and
+explain what blocked.
 
-# OUTPUT FORMAT: No markdown formatting (no **bold**, `code`, # headers). Plain text and - lists are fine.
+OUTPUT FORMAT: No markdown formatting (no **bold**, `code`, # headers). Plain
+text and - lists are fine.
