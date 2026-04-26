@@ -78,6 +78,7 @@ videoJobRoutes.get("/:id/events", (c) => {
 
 	return streamSSE(c, async (stream) => {
 		let closed = false;
+		let lastSent: string | null = null;
 
 		const toPublic = (job: Job) => {
 			const { videoPath, audioPath, script, ...rest } = job;
@@ -91,10 +92,14 @@ videoJobRoutes.get("/:id/events", (c) => {
 
 		const send = async (job: Job) => {
 			if (closed) return;
-			await stream.writeSSE({
-				event: "status",
-				data: JSON.stringify(toPublic(job)),
-			});
+			const data = JSON.stringify(toPublic(job));
+			if (data === lastSent) return;
+			lastSent = data;
+			try {
+				await stream.writeSSE({ event: "status", data });
+			} catch {
+				closed = true;
+			}
 		};
 
 		await send(initial);
@@ -104,32 +109,36 @@ videoJobRoutes.get("/:id/events", (c) => {
 		}
 
 		await new Promise<void>((resolve) => {
-			const unsubscribe = subscribe(id, (job) => {
-				void send(job).then(() => {
-					if (job.status === "done" || job.status === "failed") {
-						unsubscribe();
-						closed = true;
-						resolve();
-					}
-				});
-			});
-
-			// Re-check status after subscribing in case the job transitioned
-			// between the initial snapshot and listener registration.
-			const post = getJob(id);
-			if (post && (post.status === "done" || post.status === "failed")) {
-				void send(post).then(() => {
-					unsubscribe();
-					closed = true;
-					resolve();
-				});
-			}
-
-			stream.onAbort(() => {
+			const finish = () => {
 				unsubscribe();
 				closed = true;
 				resolve();
+			};
+
+			const unsubscribe = subscribe(id, (job) => {
+				send(job)
+					.then(() => {
+						if (closed || job.status === "done" || job.status === "failed") {
+							finish();
+						}
+					})
+					.catch(() => finish());
 			});
+
+			// Re-emit current state after subscribing — covers updates that
+			// landed between the initial snapshot and listener registration.
+			const post = getJob(id);
+			if (post) {
+				send(post)
+					.then(() => {
+						if (closed || post.status === "done" || post.status === "failed") {
+							finish();
+						}
+					})
+					.catch(() => finish());
+			}
+
+			stream.onAbort(finish);
 		});
 	});
 });
