@@ -155,6 +155,7 @@ export function ProgressStream({ jobId }: { jobId: string }) {
 	const [connectionError, setConnectionError] = useState<string | null>(null);
 	const [elapsed, setElapsed] = useState(0);
 	const sourceRef = useRef<EventSource | null>(null);
+	const terminalRef = useRef(false);
 
 	useEffect(() => {
 		const url = `${env.NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${jobId}/events`;
@@ -166,10 +167,12 @@ export function ProgressStream({ jobId }: { jobId: string }) {
 				const data = JSON.parse(e.data) as JobEvent;
 				setJob(data);
 				if (data.status === "done") {
+					terminalRef.current = true;
 					source.close();
 					router.replace(`/result?jobId=${jobId}` as Route);
 				}
 				if (data.status === "failed") {
+					terminalRef.current = true;
 					source.close();
 				}
 			} catch {
@@ -180,6 +183,7 @@ export function ProgressStream({ jobId }: { jobId: string }) {
 		source.addEventListener("status", handleStatus as EventListener);
 
 		source.onerror = () => {
+			if (terminalRef.current) return;
 			if (source.readyState === EventSource.CLOSED) {
 				setConnectionError(
 					"Lost connection to the server. Try refreshing the page.",

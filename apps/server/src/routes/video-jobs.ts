@@ -138,14 +138,12 @@ videoJobRoutes.get("/:id/video", (c) => {
 	});
 });
 
+const inflightVoiceover = new Map<string, Promise<string>>();
+
 videoJobRoutes.post("/:id/voiceover", async (c) => {
 	const id = c.req.param("id");
 	const job = getJob(id);
 	if (!job) return c.json({ error: "not found" }, 404);
-
-	if (job.audioPath && existsSync(job.audioPath)) {
-		return c.json({ audioUrl: `/api/v1/video-jobs/${id}/audio` });
-	}
 	if (!job.script) {
 		return c.json({ error: "script not ready" }, 404);
 	}
@@ -156,16 +154,25 @@ videoJobRoutes.post("/:id/voiceover", async (c) => {
 		job.script.closingCta,
 	].join(" ");
 
+	let pending = inflightVoiceover.get(id);
+	if (!pending) {
+		pending = synthesizeVoice({ jobId: id, text: narration })
+			.then(({ audioPath }) => {
+				updateJob(id, { audioPath });
+				return audioPath;
+			})
+			.finally(() => {
+				inflightVoiceover.delete(id);
+			});
+		inflightVoiceover.set(id, pending);
+	}
+
 	try {
-		const { audioPath } = await synthesizeVoice({
-			jobId: id,
-			text: narration,
-		});
-		updateJob(id, { audioPath });
+		await pending;
 		return c.json({ audioUrl: `/api/v1/video-jobs/${id}/audio` });
 	} catch (e) {
-		const msg = e instanceof Error ? e.message : String(e);
-		return c.json({ error: msg }, 502);
+		console.error(`voiceover ${id} failed:`, e);
+		return c.json({ error: "voiceover synthesis failed" }, 502);
 	}
 });
 

@@ -20,7 +20,7 @@ export default async function ResultPage({
 	}
 
 	return (
-		<ScreenShell>
+		<ScreenShell header={null}>
 			<VideoCard jobId={jobId} />
 		</ScreenShell>
 	);

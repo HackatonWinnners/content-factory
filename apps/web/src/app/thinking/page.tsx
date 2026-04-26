@@ -20,7 +20,7 @@ export default async function ThinkingPage({
 	}
 
 	return (
-		<ScreenShell>
+		<ScreenShell header={null}>
 			<ProgressStream jobId={jobId} />
 		</ScreenShell>
 	);

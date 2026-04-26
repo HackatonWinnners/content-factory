@@ -3,6 +3,7 @@ import { type RepoSnapshot, RepoSnapshotSchema } from "./schemas";
 
 const USER_AGENT = "content-factory-agent";
 const README_MAX = 12_000;
+const GH_TIMEOUT_MS = 10_000;
 
 export type ParsedRepo = { owner: string; name: string };
 
@@ -42,7 +43,20 @@ async function ghFetch(path: string): Promise<unknown> {
 		Accept: "application/vnd.github+json",
 	};
 	if (env.GITHUB_TOKEN) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
-	const res = await fetch(`https://api.github.com${path}`, { headers });
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), GH_TIMEOUT_MS);
+	let res: Response;
+	try {
+		res = await fetch(`https://api.github.com${path}`, {
+			headers,
+			signal: controller.signal,
+		});
+	} catch (e) {
+		clearTimeout(timer);
+		const reason = e instanceof Error ? e.message : String(e);
+		throw new Error(`github ${path} request failed: ${reason}`);
+	}
+	clearTimeout(timer);
 	if (!res.ok) {
 		throw new Error(`github ${path} responded ${res.status}`);
 	}

@@ -32,7 +32,14 @@ export async function writeScriptFromRepo({
 	const retryUser = `${user}\n\nIMPORTANT: previous draft totalled ${totalSeconds(
 		first,
 	)}s. The sum of all scenes' durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC}.`;
-	return runOnce({ system, user: retryUser });
+	const second = await runOnce({ system, user: retryUser });
+	const secs = totalSeconds(second);
+	if (secs < MIN_TOTAL_SEC || secs > MAX_TOTAL_SEC) {
+		console.warn(
+			`[agent.script] retry still out-of-bounds: ${secs}s (target ${MIN_TOTAL_SEC}-${MAX_TOTAL_SEC}s)`,
+		);
+	}
+	return second;
 }
 
 async function runOnce({
