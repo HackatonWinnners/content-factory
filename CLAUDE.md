@@ -33,7 +33,10 @@ This repo was scaffolded by Better-T-Stack. Respect the existing structure.
 - Backend (`apps/server`): **Hono 4** on `@hono/node-server` (port 3000).
   Build via **tsdown**, dev via `tsx watch`. No Express, no NestJS.
 - LLM: **AI SDK v6** with `@ai-sdk/google` (model: `gemini-2.5-flash`).
-  Already wired in `apps/server/src/index.ts`. Streaming via `streamText`.
+  - Script writer (`packages/agent/src/script.ts`): `generateObject` with
+    `VideoScriptSchema` for structured editorial output.
+  - Legacy chat demo (`apps/server/src/routes/ai.ts`): `streamText` for the
+    `/ai` page playground (devtools middleware gated to `NODE_ENV=development`).
   Talk to Tavily/Hera/Gradium/Pioneer over their REST APIs.
 - Validation: **Zod 4** at all external boundaries (HTTP req/resp, env, external APIs).
 - DB: **Postgres 16** via `packages/db` docker-compose. ORM: **Drizzle**.
@@ -61,7 +64,7 @@ when the table says "REST".
 | Google Gemini | AI SDK (`@ai-sdk/google`)          | Streaming via `streamText`. Already wired in server.                 |
 | Tavily        | REST via `fetch` (no extra dep)    | Official `tavily-mcp` exists but only for agent tooling, not runtime |
 | Hera          | REST via `fetch`                   | No SDK, no MCP. `x-api-key` header. See docs.hera.video               |
-| Gradium       | REST via `fetch`                   | No SDK, no MCP. Voice cloning + TTS                                  |
+| Gradium       | REST via `fetch`                   | TTS endpoint: `POST https://api.gradium.ai/api/post/speech/tts` with `x-api-key` header. `output_format: "wav"`, `only_audio: true`. See `apps/server/src/lib/gradium.ts`. |
 | Pioneer       | REST via `fetch` (Fastino API)     | No SDK, no MCP. Use `PIONEER_API_KEY`                                |
 | Entire        | CLI hooks (already installed)      | Captures sessions per commit. No SDK, no MCP                         |
 | Aikido        | Final scan via web UI before submit| `@aikidosec/mcp` exists for dev tooling but not used at runtime      |
@@ -79,9 +82,13 @@ packages/
   db/         Drizzle schema + migrations + docker-compose.yml
   ui/         shadcn/ui components shared between web and server
   composer/   Remotion project — compositions + programmatic render API
-  agent/      Editorial pipeline: Gemini calls, Tavily, Pioneer (TO ADD)
+  agent/      Editorial pipeline: parseRepoUrl + fetchRepoSnapshot (GitHub REST),
+              fetchMarketContext (Tavily), writeScriptFromRepo (Gemini via AI SDK
+              generateObject). Exports VideoScriptSchema, BrandProfileSchema,
+              RepoSnapshotSchema, MarketContextSchema.
 docs/
-  plans/      Ralph plan files
+  plans/      Ralph plan files (active)
+  plans/completed/ — finished plans
 ```
 
 ## Hard rules — never break these
@@ -147,20 +154,16 @@ introduce responsive breakpoints — the hackathon target is desktop only.
 
 ## Plan execution order
 
-Plans live in `docs/plans/`. Execute in order; each plan ends with the
-validation commands green.
+Plans live in `docs/plans/`. Active plans are unchecked; completed plans move
+to `docs/plans/completed/` automatically.
 
-1. `00-foundation.md` — backend foundation (DB schema, agent package, route
-   restructure). **Optional/deferrable**: design plans 01–05 do not depend
-   on this. Run when backend wiring begins.
-2. `01-design-system.md` — design tokens, app shell, route stubs.
-3. `02-screen-brand-setup.md` — `/brand-setup` page.
-4. `03-screen-source-input.md` — `/source` page.
-5. `04-screen-agent-thinking.md` — `/thinking` page.
-6. `05-screen-result.md` — `/result` page.
+The hackathon MVP was delivered by
+`docs/plans/completed/2026-04-26-hackathon-mvp.md` — one plan, 12 tasks, all
+checked off (design tokens, four screens, agent package, server pipeline,
+SSE, Gradium TTS, env wiring). The earlier `00-foundation` … `05-screen-result`
+series was discarded and superseded by that consolidated plan.
 
-For the hackathon demo, run 01 → 02 → 03 → 04 → 05 first (the visual surface),
-then 00 + later plans for backend wiring.
+New work needs a fresh plan in `docs/plans/`.
 
 ## Plugins and skills auto-loaded in this session
 

@@ -188,12 +188,21 @@ async function runPipeline(
 
 	updateJob(jobId, { status: "rendering", progress: 65 });
 	const videoPath = path.join(os.tmpdir(), `cf-${jobId}.mp4`);
+	let lastProgressTick = 65;
 	await renderVideo({
 		compositionId: "script-video",
-		inputProps: { script, brand },
+		inputProps: {
+			script,
+			brand,
+			repo: { owner: snapshot.owner, name: snapshot.name },
+		},
 		outputLocation: videoPath,
 		onProgress: (p) => {
-			updateJob(jobId, { progress: 65 + Math.round(p * 25) });
+			const next = 65 + Math.round(p * 25);
+			if (next !== lastProgressTick) {
+				lastProgressTick = next;
+				updateJob(jobId, { progress: next });
+			}
 		},
 	});
 

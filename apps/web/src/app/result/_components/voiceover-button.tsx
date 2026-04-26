@@ -111,7 +111,7 @@ export function VoiceoverButton({
 				<div className="flex items-center gap-3">
 					<a
 						href={audioUrl}
-						download={`cf-${jobId}-voiceover.mp3`}
+						download={`cf-${jobId}-voiceover.wav`}
 						className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--color-border)] bg-transparent px-3 font-medium text-[12px] text-[var(--color-text)] transition-[background-color,border-color] duration-[120ms] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-elev-1)]"
 					>
 						<DownloadIcon />

@@ -4,7 +4,11 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 
-import { type BrandProfile, saveBrandProfile } from "@/lib/brand-profile";
+import {
+	type BrandProfile,
+	defaultBrandProfile,
+	saveBrandProfile,
+} from "@/lib/brand-profile";
 
 type ToneKey = keyof BrandProfile["tone"];
 
@@ -104,6 +108,7 @@ export function BrandForm({ profile, onChange }: Props) {
 	}
 
 	function handleSkip() {
+		saveBrandProfile(defaultBrandProfile());
 		router.push("/source" as Route);
 	}
 

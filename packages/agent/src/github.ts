@@ -1,3 +1,4 @@
+import { env } from "@content-factory/env/server";
 import { type RepoSnapshot, RepoSnapshotSchema } from "./schemas";
 
 const USER_AGENT = "content-factory-agent";
@@ -5,22 +6,25 @@ const README_MAX = 12_000;
 
 export type ParsedRepo = { owner: string; name: string };
 
+// GitHub-permitted segment chars: alphanumerics, dot, dash, underscore.
+const SEGMENT = /^[A-Za-z0-9._-]+$/;
+
 export function parseRepoUrl(input: string): ParsedRepo {
 	const trimmed = input.trim();
 	if (trimmed.length === 0) {
 		throw new Error("repo input is empty");
 	}
 
-	const ghShort = trimmed.match(/^gh:([^/\s]+)\/([^/\s]+?)\/?$/i);
-	if (ghShort?.[1] && ghShort[2]) {
-		return { owner: ghShort[1], name: stripGitSuffix(ghShort[2]) };
-	}
-
 	const httpUrl = trimmed.match(
-		/^https?:\/\/github\.com\/([^/\s]+)\/([^/\s?#]+?)\/?(?:[?#].*)?$/i,
+		/^https?:\/\/(?:www\.)?github\.com\/([^/\s?#]+)\/([^/\s?#]+?)\/?(?:[?#].*)?$/i,
 	);
 	if (httpUrl?.[1] && httpUrl[2]) {
-		return { owner: httpUrl[1], name: stripGitSuffix(httpUrl[2]) };
+		const owner = httpUrl[1];
+		const name = stripGitSuffix(httpUrl[2]);
+		if (!SEGMENT.test(owner) || !SEGMENT.test(name)) {
+			throw new Error(`unsupported repo input: ${input}`);
+		}
+		return { owner, name };
 	}
 
 	throw new Error(`unsupported repo input: ${input}`);
@@ -31,12 +35,12 @@ function stripGitSuffix(name: string): string {
 }
 
 async function ghFetch(path: string): Promise<unknown> {
-	const res = await fetch(`https://api.github.com${path}`, {
-		headers: {
-			"User-Agent": USER_AGENT,
-			Accept: "application/vnd.github+json",
-		},
-	});
+	const headers: Record<string, string> = {
+		"User-Agent": USER_AGENT,
+		Accept: "application/vnd.github+json",
+	};
+	if (env.GITHUB_TOKEN) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
+	const res = await fetch(`https://api.github.com${path}`, { headers });
 	if (!res.ok) {
 		throw new Error(`github ${path} responded ${res.status}`);
 	}
@@ -56,10 +60,14 @@ type GhCommit = { commit: { message: string; author: { date: string } } };
 export async function fetchRepoSnapshot(input: string): Promise<RepoSnapshot> {
 	const { owner, name } = parseRepoUrl(input);
 
+	const ownerEnc = encodeURIComponent(owner);
+	const nameEnc = encodeURIComponent(name);
 	const [repoRaw, readmeRaw, commitsRaw] = await Promise.all([
-		ghFetch(`/repos/${owner}/${name}`),
-		ghFetch(`/repos/${owner}/${name}/readme`).catch(() => null),
-		ghFetch(`/repos/${owner}/${name}/commits?per_page=20`).catch(() => []),
+		ghFetch(`/repos/${ownerEnc}/${nameEnc}`),
+		ghFetch(`/repos/${ownerEnc}/${nameEnc}/readme`).catch(() => null),
+		ghFetch(`/repos/${ownerEnc}/${nameEnc}/commits?per_page=20`).catch(
+			() => [],
+		),
 	]);
 
 	const repo = repoRaw as GhRepo;

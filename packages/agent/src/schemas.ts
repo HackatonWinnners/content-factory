@@ -58,7 +58,7 @@ export type BrandProfile = z.infer<typeof BrandProfileSchema>;
 
 export const VideoSceneSchema = z.object({
 	text: z.string().min(1),
-	bullets: z.array(z.string()).optional(),
+	bullets: z.array(z.string()).max(5).optional(),
 	durationSec: z.number().min(2).max(8),
 });
 

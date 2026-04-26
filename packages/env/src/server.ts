@@ -42,6 +42,7 @@ export const env = createEnv({
 		HERA_API_KEY: z.string().min(1),
 		PIONEER_API_KEY: z.string().min(1),
 		GRADIUM_API_KEY: z.string().min(1),
+		GITHUB_TOKEN: z.string().optional(),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

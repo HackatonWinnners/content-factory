@@ -111,6 +111,43 @@ https://github.com/honojs/hono
 
 ---
 
+## Screens (port 3001)
+
+| Route          | Purpose                                                    |
+| -------------- | ---------------------------------------------------------- |
+| `/`            | Landing — `Set up your brand` or `Skip — use defaults`     |
+| `/brand-setup` | Brand profile form (name, voice, three tone sliders)       |
+| `/source`      | GitHub URL input (Linear/PDF disabled placeholders)        |
+| `/thinking`    | SSE-driven progress for the active job                     |
+| `/result`      | Video player + Gradium voiceover button + downloads        |
+
+The brand profile is persisted in browser `localStorage` under
+`cf:brandProfile` and posted with every job.
+
+## API (port 3000)
+
+| Method | Path                                  | Description                                       |
+| ------ | ------------------------------------- | ------------------------------------------------- |
+| GET    | `/api/v1/health`                      | `{ ok, version, uptime }`                         |
+| POST   | `/api/v1/ai`                          | AI SDK streaming chat (legacy `/ai` playground)   |
+| POST   | `/api/v1/video-jobs`                  | `{ kind:"git", ref, brand }` → `{ jobId }`        |
+| GET    | `/api/v1/video-jobs/:id`              | Current job state JSON                            |
+| GET    | `/api/v1/video-jobs/:id/events`       | SSE stream of pipeline status updates             |
+| GET    | `/api/v1/video-jobs/:id/video`        | `video/mp4` of the rendered MP4                   |
+| POST   | `/api/v1/video-jobs/:id/voiceover`    | Trigger Gradium TTS, returns `{ audioUrl }`      |
+| GET    | `/api/v1/video-jobs/:id/audio`        | `audio/wav` of the generated voiceover            |
+
+Only `kind: "git"` is accepted today; `linear` and `pdf` return 400.
+SSE statuses: `pending → extracting → researching → scripting → rendering → done | failed`.
+
+```bash
+curl -X POST http://localhost:3000/api/v1/video-jobs \
+  -H 'content-type: application/json' \
+  -d '{"kind":"git","ref":"https://github.com/honojs/hono","brand":{"name":"Demo","voice":"casual","tone":{"formalCasual":50,"seriousPlayful":50,"directStorytelling":50}}}'
+```
+
+---
+
 ## Project layout
 
 ```

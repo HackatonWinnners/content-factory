@@ -30,7 +30,6 @@ type StepKey =
 	| "researching"
 	| "scripting"
 	| "rendering"
-	| "voicing"
 	| "done";
 
 type StepState = "done" | "in-progress" | "pending";
@@ -74,20 +73,11 @@ const STEPS: StepDef[] = [
 		doneBody: "Rendered the scenes with Remotion at 9:16, 30fps.",
 	},
 	{
-		key: "voicing",
-		name: "synthesize_voiceover",
-		pendingBody:
-			"Voiceover synthesizes on the result page (powered by Gradium).",
-		activeBody: "Synthesizing voiceover with Gradium…",
-		doneBody: "Voiceover ready (powered by Gradium).",
-	},
-	{
 		key: "done",
 		name: "compose_final_video",
-		pendingBody:
-			"Will mix scenes, voiceover, and brand framing into the final MP4.",
+		pendingBody: "Will mix scenes and brand framing into the final MP4.",
 		activeBody: "Finalizing…",
-		doneBody: "Final video ready.",
+		doneBody: "Final video ready. Voiceover available on the result page.",
 	},
 ];
 
@@ -97,8 +87,8 @@ const STATUS_INDEX: Record<JobStatus, number> = {
 	researching: 1,
 	scripting: 2,
 	rendering: 3,
-	voicing: 4,
-	done: 5,
+	voicing: 3,
+	done: 4,
 	failed: -1,
 };
 
