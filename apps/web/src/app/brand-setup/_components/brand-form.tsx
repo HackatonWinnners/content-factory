@@ -102,7 +102,11 @@ export function BrandForm({ profile, onChange }: Props) {
 		onChange({ ...profile, tone: { ...profile.tone, [key]: value } });
 	}
 
+	const canSave =
+		profile.name.trim().length > 0 && profile.voice.trim().length > 0;
+
 	function handleSave() {
+		if (!canSave) return;
 		saveBrandProfile(profile);
 		router.push("/source" as Route);
 	}
@@ -197,7 +201,8 @@ export function BrandForm({ profile, onChange }: Props) {
 				<button
 					type="button"
 					onClick={handleSave}
-					className="inline-flex h-11 w-[240px] items-center justify-center gap-2 rounded-md border border-[var(--color-magenta)] bg-[var(--color-magenta)] px-4 font-medium text-[14px] text-white transition-[background-color,transform] duration-[120ms] hover:bg-[#ED2F86] active:translate-y-[1px]"
+					disabled={!canSave}
+					className="inline-flex h-11 w-[240px] items-center justify-center gap-2 rounded-md border border-[var(--color-magenta)] bg-[var(--color-magenta)] px-4 font-medium text-[14px] text-white transition-[background-color,transform] duration-[120ms] hover:bg-[#ED2F86] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-magenta)]"
 				>
 					Save brand profile
 				</button>

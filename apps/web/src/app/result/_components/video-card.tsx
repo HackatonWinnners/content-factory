@@ -99,6 +99,7 @@ export function VideoCard({ jobId }: { jobId: string }) {
 	useEffect(() => {
 		let cancelled = false;
 		let timer: ReturnType<typeof setTimeout> | null = null;
+		let consecutiveFailures = 0;
 
 		const tick = async () => {
 			try {
@@ -110,13 +111,19 @@ export function VideoCard({ jobId }: { jobId: string }) {
 				}
 				const data = (await response.json()) as Job;
 				if (cancelled) return;
+				consecutiveFailures = 0;
 				setJob(data);
+				setLoadError(null);
 				if (data.status !== "done" && data.status !== "failed") {
 					timer = setTimeout(tick, 2000);
 				}
 			} catch (e) {
 				if (cancelled) return;
-				setLoadError(e instanceof Error ? e.message : "Failed to load job");
+				consecutiveFailures += 1;
+				if (consecutiveFailures >= 3) {
+					setLoadError(e instanceof Error ? e.message : "Failed to load job");
+				}
+				timer = setTimeout(tick, 4000);
 			}
 		};
 

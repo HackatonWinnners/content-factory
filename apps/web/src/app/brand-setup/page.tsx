@@ -6,7 +6,12 @@ import { useEffect, useState } from "react";
 
 import { OnboardingStrip } from "@/components/onboarding-strip";
 import { ScreenShell } from "@/components/screen-shell";
-import { type BrandProfile, loadBrandProfile } from "@/lib/brand-profile";
+import {
+	type BrandProfile,
+	defaultBrandProfile,
+	loadBrandProfile,
+	saveBrandProfile,
+} from "@/lib/brand-profile";
 
 import { BrandForm } from "./_components/brand-form";
 import { BrandPreview } from "./_components/brand-preview";
@@ -34,6 +39,7 @@ export default function BrandSetupPage() {
 	}, []);
 
 	function handleSkip() {
+		saveBrandProfile(defaultBrandProfile());
 		router.push("/source" as Route);
 	}
 
