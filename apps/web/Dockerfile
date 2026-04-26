@@ -22,6 +22,11 @@ ENV PORT=3000
 
 COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
+# Lockfile + manifests for SCA scanners (Aikido). Standalone build doesn't
+# need them at runtime; keeping them so vulnerability scanners read the graph.
+COPY --from=build /repo/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=build /repo/package.json ./package.json
+COPY --from=build /repo/apps/web/package.json ./apps/web/package.json
 
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
