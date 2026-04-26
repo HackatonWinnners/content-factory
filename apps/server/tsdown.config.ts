@@ -21,6 +21,10 @@ export default defineConfig({
 	outDir: "./dist",
 	clean: true,
 	noExternal: [/@content-factory\/.*/],
+	// Keep Remotion + rspack out of the bundle. They have native bindings, dynamic
+	// CJS requires (e.g. `@remotion/studio/renderEntry`) and chromium hooks that
+	// blow up when inlined. Resolved from apps/server/node_modules at runtime.
+	external: [/^@remotion\//, /^@rspack\//, "remotion"],
 	outputOptions: {
 		banner: esmCjsCompatBanner,
 	},

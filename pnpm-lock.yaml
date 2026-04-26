@@ -96,6 +96,15 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.4
         version: 1.19.14(hono@4.12.15)
+      '@remotion/bundler':
+        specifier: ^4.0.380
+        version: 4.0.451(@swc/helpers@0.5.15)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@remotion/renderer':
+        specifier: ^4.0.380
+        version: 4.0.451(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@remotion/studio':
+        specifier: ^4.0.380
+        version: 4.0.451(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       ai:
         specifier: 'catalog:'
         version: 6.0.168(zod@4.3.6)
@@ -105,6 +114,9 @@ importers:
       hono:
         specifier: ^4.8.2
         version: 4.12.15
+      remotion:
+        specifier: ^4.0.380
+        version: 4.0.451(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -9510,7 +9522,7 @@ snapshots:
 
   tapable@2.3.3: {}
 
-  terser-webpack-plugin@5.5.0(esbuild@0.25.0)(webpack@5.105.0):
+  terser-webpack-plugin@5.5.0(esbuild@0.25.0)(webpack@5.105.0(esbuild@0.25.0)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
@@ -9789,7 +9801,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
-      terser-webpack-plugin: 5.5.0(esbuild@0.25.0)(webpack@5.105.0)
+      terser-webpack-plugin: 5.5.0(esbuild@0.25.0)(webpack@5.105.0(esbuild@0.25.0))
       watchpack: 2.5.1
       webpack-sources: 3.4.0
     transitivePeerDependencies:

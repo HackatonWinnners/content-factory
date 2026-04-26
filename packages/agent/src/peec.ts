@@ -8,33 +8,41 @@ const PEEC_BASE = "https://api.peec.ai/customer/v1";
 const TIMEOUT_MS = 8_000;
 const REPORT_DAYS = 30;
 
+// All Peec list/report endpoints wrap rows in `{ data: [...] }`.
+type PeecEnvelope<T> = { data: T[] };
+
+type PeecProject = { id: string; name: string; status?: string };
+
 type PeecBrand = {
 	id: string;
 	name: string;
 	domains: string[];
-	aliases: string[];
 	is_own?: boolean;
+	color?: string;
 };
 
 type PeecBrandReportRow = {
-	brand_id: string;
-	brand_name: string;
-	visibility?: number | null;
-	share_of_voice?: number | null;
-	sentiment?: number | null;
+	brand: { id: string; name: string };
 	mention_count?: number | null;
+	visibility?: number | null;
+	visibility_count?: number | null;
+	visibility_total?: number | null;
 };
 
 type PeecDomainReportRow = {
 	domain: string;
 	classification?: string | null;
+	usage_rate?: number | null;
 	citation_rate?: number | null;
 	retrieval_rate?: number | null;
+	retrieval_count?: number | null;
+	citation_count?: number | null;
+	mentioned_brands?: { id: string; name: string }[];
 };
 
 interface FetchArgs {
 	brandName: string;
-	projectId?: string; // optional override — useful for hackathon test projects
+	projectId?: string;
 }
 
 // Best-effort: returns enriched context if PEEC_API_KEY is set AND we can find
@@ -52,55 +60,79 @@ export async function fetchPeecContext({
 		opportunityDomains: [],
 	});
 
-	if (!env.PEEC_API_KEY) {
-		return empty();
-	}
+	if (!env.PEEC_API_KEY) return empty();
 
 	try {
-		// 1. Discover brands. If projectId given use it, otherwise let key scope decide.
-		const brandsRes = await peecGet<PeecBrand[]>(
-			`/brands${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ""}`,
-		);
-		if (!brandsRes || brandsRes.length === 0) return empty();
+		// 1. Resolve project_id. If caller passed one, trust it. Otherwise pick
+		//    the project whose name best matches the brand, falling back to
+		//    the first one.
+		let pid = projectId;
+		if (!pid) {
+			const projectsRes = await peecGet<PeecEnvelope<PeecProject>>("/projects");
+			const projects = projectsRes?.data ?? [];
+			if (projects.length === 0) return empty();
+			const matched =
+				projects.find((p) =>
+					p.name.toLowerCase().includes(brandName.toLowerCase()),
+				) ?? projects[0];
+			if (!matched) return empty();
+			pid = matched.id;
+		}
 
-		// Pick own brand: explicit `is_own` if present, else closest name match.
+		// 2. Discover brands tracked in this project.
+		const brandsRes = await peecGet<PeecEnvelope<PeecBrand>>(
+			`/brands?project_id=${encodeURIComponent(pid)}`,
+		);
+		const brands = brandsRes?.data ?? [];
+		if (brands.length === 0) return empty();
+
+		// Pick own brand: explicit `is_own` if any, else best name match,
+		// else fall back to the first.
 		const ownBrand =
-			brandsRes.find((b) => b.is_own) ??
-			brandsRes.find((b) =>
+			brands.find((b) => b.is_own) ??
+			brands.find((b) =>
 				b.name.toLowerCase().includes(brandName.toLowerCase()),
 			) ??
-			brandsRes[0];
+			brands[0];
 		if (!ownBrand) return empty();
 
-		// 2. Brand visibility/share-of-voice report over the last 30 days.
-		const brandReport = await peecPost<PeecBrandReportRow[]>(
+		// 3. Brand visibility report — last 30 days, no filters so we get all
+		//    tracked brands aggregated.
+		const reportRes = await peecPost<PeecEnvelope<PeecBrandReportRow>>(
 			"/reports/brands",
 			{
-				...(projectId ? { project_id: projectId } : {}),
+				project_id: pid,
 				start_date: isoDaysAgo(REPORT_DAYS),
-				end_date: new Date().toISOString().slice(0, 10),
-				dimensions: ["brand"],
+				end_date: today(),
 			},
 		);
+		const rows = reportRes?.data ?? [];
 
-		const ownRow = brandReport?.find((r) => r.brand_id === ownBrand.id);
-		const competitorRows = (brandReport ?? [])
-			.filter((r) => r.brand_id !== ownBrand.id)
-			.sort((a, b) => (b.share_of_voice ?? 0) - (a.share_of_voice ?? 0))
+		const ownRow = rows.find((r) => r.brand.id === ownBrand.id);
+		const competitorRows = rows
+			.filter((r) => r.brand.id !== ownBrand.id)
+			.sort((a, b) => (b.mention_count ?? 0) - (a.mention_count ?? 0))
 			.slice(0, 5);
 
-		// 3. Domains report — find where competitors are cited but own brand isn't.
-		const domainReport = await peecPost<PeecDomainReportRow[]>(
+		// 4. Domain report — find high-traffic domains where we're absent.
+		//    A domain is an "opportunity" if it has a non-trivial retrieval
+		//    rate but our brand is not in its mentioned_brands list.
+		const domainRes = await peecPost<PeecEnvelope<PeecDomainReportRow>>(
 			"/reports/domains",
 			{
-				...(projectId ? { project_id: projectId } : {}),
+				project_id: pid,
 				start_date: isoDaysAgo(REPORT_DAYS),
-				end_date: new Date().toISOString().slice(0, 10),
+				end_date: today(),
 			},
 		).catch(() => null);
+		const domains = domainRes?.data ?? [];
 
-		const opportunityDomains = (domainReport ?? [])
-			.filter((d) => (d.citation_rate ?? 0) < 0.2)
+		const opportunityDomains = domains
+			.filter((d) => (d.retrieval_rate ?? 0) > 0.05)
+			.filter((d) => {
+				const mentioned = d.mentioned_brands ?? [];
+				return !mentioned.some((b) => b.id === ownBrand.id);
+			})
 			.sort((a, b) => (b.retrieval_rate ?? 0) - (a.retrieval_rate ?? 0))
 			.slice(0, 5)
 			.map((d) => d.domain)
@@ -111,10 +143,9 @@ export async function fetchPeecContext({
 			brandName: ownBrand.name,
 			ownBrand: ownRow
 				? {
-						visibility: clamp01(ownRow.visibility),
-						shareOfVoice: clamp01(ownRow.share_of_voice),
-						sentiment:
-							typeof ownRow.sentiment === "number" ? ownRow.sentiment : null,
+						visibility: ratio(ownRow.visibility),
+						shareOfVoice: shareOfVoice(ownRow, rows),
+						sentiment: null,
 						mentionCount:
 							typeof ownRow.mention_count === "number"
 								? ownRow.mention_count
@@ -122,9 +153,9 @@ export async function fetchPeecContext({
 					}
 				: null,
 			competitors: competitorRows.map((r) => ({
-				name: r.brand_name,
-				visibility: clamp01(r.visibility),
-				shareOfVoice: clamp01(r.share_of_voice),
+				name: r.brand.name,
+				visibility: ratio(r.visibility),
+				shareOfVoice: shareOfVoice(r, rows),
 			})),
 			opportunityDomains,
 		});
@@ -185,9 +216,24 @@ function isoDaysAgo(days: number): string {
 	return d.toISOString().slice(0, 10);
 }
 
-function clamp01(n: number | null | undefined): number | null {
+function today(): string {
+	return new Date().toISOString().slice(0, 10);
+}
+
+// Peec's `visibility` is already 0-1. Clamp defensively.
+function ratio(n: number | null | undefined): number | null {
 	if (typeof n !== "number" || Number.isNaN(n)) return null;
-	if (n <= 1) return Math.max(0, n);
-	// Some endpoints return percentages 0-100; normalise to 0-1.
-	return Math.max(0, Math.min(1, n / 100));
+	if (n > 1) return Math.min(1, n / 100);
+	return Math.max(0, Math.min(1, n));
+}
+
+// Derive share-of-voice from mention counts since the API doesn't surface it
+// directly: brand_mentions / sum(all_brand_mentions).
+function shareOfVoice(
+	row: PeecBrandReportRow,
+	all: PeecBrandReportRow[],
+): number | null {
+	const total = all.reduce((s, r) => s + (r.mention_count ?? 0), 0);
+	if (total <= 0) return null;
+	return Math.max(0, Math.min(1, (row.mention_count ?? 0) / total));
 }

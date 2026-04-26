@@ -17,9 +17,13 @@
 		"@content-factory/db": "workspace:*",
 		"@content-factory/env": "workspace:*",
 		"@hono/node-server": "^1.14.4",
+		"@remotion/bundler": "^4.0.380",
+		"@remotion/renderer": "^4.0.380",
+		"@remotion/studio": "^4.0.380",
 		"ai": "catalog:",
 		"dotenv": "catalog:",
 		"hono": "^4.8.2",
+		"remotion": "^4.0.380",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
