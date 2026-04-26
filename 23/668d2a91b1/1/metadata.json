@@ -1,0 +1,51 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "23668d2a91b1",
+  "session_id": "a15079bd-63f4-4748-8bab-14523e7ff485",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T00:52:43.38704Z",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/server/src/lib/jobs.ts",
+    "apps/server/src/lib/gradium.ts",
+    "apps/server/src/routes/health.ts",
+    "apps/server/src/routes/ai.ts",
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/server/src/index.ts",
+    "apps/server/package.json",
+    "apps/web/src/app/ai/page.tsx",
+    "docs/plans/2026-04-26-hackathon-mvp.md"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "5725acfacd0c",
+  "token_usage": {
+    "input_tokens": 58,
+    "cache_creation_tokens": 150730,
+    "cache_read_tokens": 3566259,
+    "output_tokens": 17290,
+    "api_call_count": 48
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T00:52:43.380982Z",
+    "agent_lines": 416,
+    "agent_removed": 31,
+    "human_added": 3,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 419,
+    "total_lines_changed": 450,
+    "agent_percentage": 99.33333333333333,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
