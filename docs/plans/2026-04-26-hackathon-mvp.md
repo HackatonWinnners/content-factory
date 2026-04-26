@@ -166,12 +166,12 @@ Dependencies (no new top-level deps):
 - Create: `apps/web/src/app/thinking/page.tsx`
 - Create: `apps/web/src/app/thinking/_components/progress-stream.tsx`
 
-- [ ] Read `docs/design/hack/project/Agent Thinking.html` and `app.jsx` top-to-bottom.
-- [ ] Page is a server component reading `?jobId=` (Next 16 dynamic search params), renders `ScreenShell` with the client `ProgressStream` mounted with that id.
-- [ ] `ProgressStream` (`"use client"`): opens `new EventSource(${NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${jobId}/events)`. Renders six vertical pipeline rows matching design: Extracting facts, Researching context, Writing script, Rendering scenes, Synthesizing voice, Done. Map server statuses 1:1. Active step glows magenta with pulsing dot; completed green; pending muted. On `data.status === "done"` close source and `router.replace(\`/result?jobId=\${jobId}\`)`. On `failed` show error in red with `Try again` link to `/source`.
-- [ ] Note: voiceover triggered from Result page (Task 10), not the SSE pipeline. "Synthesizing voice" row stays muted until result page kicks it off — keeps `done` from blocking on TTS.
-- [ ] Cleanup: close `EventSource` on unmount.
-- [ ] Playwright self-test: with server running, post a real job from Task 7 smoke, capture `jobId`, navigate `/thinking?jobId=<id>`, `browser_wait_for` text "Done" (timeout 240s), assert redirect to `/result?jobId=...`. Mid-progress screenshot `.screenshots/05-thinking.png`. `pnpm lint && pnpm check-types && pnpm -F web build` green.
+- [x] Read `docs/design/hack/project/Agent Thinking.html` and `app.jsx` top-to-bottom.
+- [x] Page is a server component reading `?jobId=` (Next 16 dynamic search params), renders `ScreenShell` with the client `ProgressStream` mounted with that id.
+- [x] `ProgressStream` (`"use client"`): opens `new EventSource(${NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${jobId}/events)`. Renders six vertical pipeline rows matching design: Extracting facts, Researching context, Writing script, Rendering scenes, Synthesizing voice, Done. Map server statuses 1:1. Active step glows magenta with pulsing dot; completed green; pending muted. On `data.status === "done"` close source and `router.replace(\`/result?jobId=\${jobId}\`)`. On `failed` show error in red with `Try again` link to `/source`.
+- [x] Note: voiceover triggered from Result page (Task 10), not the SSE pipeline. "Synthesizing voice" row stays muted until result page kicks it off — keeps `done` from blocking on TTS.
+- [x] Cleanup: close `EventSource` on unmount.
+- [x] Playwright self-test: with server running, post a real job from Task 7 smoke, capture `jobId`, navigate `/thinking?jobId=<id>`, `browser_wait_for` text "Done" (timeout 240s), assert redirect to `/result?jobId=...`. Mid-progress screenshot `.screenshots/05-thinking.png`. `pnpm lint && pnpm check-types && pnpm -F web build` green.
 
 ### Task 10: /result screen — video player + Gradium voiceover + actions
 
