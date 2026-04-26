@@ -1,9 +1,28 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
+// Locate the Remotion entry. In dev `import.meta.url` points at this file in
+// `packages/composer/src/`, so the sibling `index.ts` is right next door. In
+// production the server bundle is `apps/server/dist/index.mjs` and this code
+// gets inlined, so we walk up to the workspace root and pick up the on-disk
+// composer source the docker image ships.
+function resolveComposerEntry(): string {
+	const here = path.dirname(fileURLToPath(import.meta.url));
+	const sibling = path.join(here, "index.ts");
+	if (existsSync(sibling)) return sibling;
+	let dir = here;
+	for (let i = 0; i < 12; i++) {
+		const cand = path.join(dir, "packages", "composer", "src", "index.ts");
+		if (existsSync(cand)) return cand;
+		const parent = path.dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+	throw new Error("composer entry index.ts not found from " + here);
+}
 
 export interface RenderOptions {
 	compositionId: string;
@@ -14,7 +33,7 @@ export interface RenderOptions {
 
 export async function renderVideo(opts: RenderOptions): Promise<void> {
 	const bundled = await bundle({
-		entryPoint: path.join(here, "index.ts"),
+		entryPoint: resolveComposerEntry(),
 	});
 
 	const composition = await selectComposition({
