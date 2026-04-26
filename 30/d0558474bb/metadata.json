@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "30d0558474bb",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "apps/server/tsdown.config.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/30/d0558474bb/0/metadata.json",
+      "transcript": "/30/d0558474bb/0/full.jsonl",
+      "content_hash": "/30/d0558474bb/0/content_hash.txt",
+      "prompt": "/30/d0558474bb/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 513,
+    "cache_creation_tokens": 666500,
+    "cache_read_tokens": 92704835,
+    "output_tokens": 121246,
+    "api_call_count": 453
+  }
+}
