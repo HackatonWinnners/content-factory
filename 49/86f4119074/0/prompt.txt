@@ -1,0 +1,29 @@
+continue deploy
+
+---
+
+задеплой новую хуйню, мы там добавили приколов, и в енв вроде чета новое
+
+---
+
+Generation failed
+ENOENT: no such file or directory, open '/repo/apps/server/dist/index.ts'
+
+---
+
+Generation failed
+Cannot find module '@remotion/studio/renderEntry' Require stack: - /repo/apps/server/dist/index.mjs
+
+---
+
+<task-notification>
+<task-id>b6hy8fjwu</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-madvil2-Projects-content-factory/59663164-bb96-4ede-a1f3-183c90dc5e8b/tasks/b6hy8fjwu.output</output-file>
+<status>completed</status>
+<summary>Background command "Push to dokku" completed (exit code 0)</summary>
+</task-notification>
+
+---
+
+обнову запуш
