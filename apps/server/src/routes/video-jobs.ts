@@ -356,15 +356,18 @@ async function runWithLimit<T, R>(
 ): Promise<R[]> {
 	const results: R[] = new Array(items.length);
 	let cursor = 0;
-	const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-		while (true) {
-			const i = cursor++;
-			if (i >= items.length) return;
-			const item = items[i];
-			if (item === undefined) continue;
-			results[i] = await worker(item);
-		}
-	});
+	const runners = Array.from(
+		{ length: Math.min(limit, items.length) },
+		async () => {
+			while (true) {
+				const i = cursor++;
+				if (i >= items.length) return;
+				const item = items[i];
+				if (item === undefined) continue;
+				results[i] = await worker(item);
+			}
+		},
+	);
 	await Promise.all(runners);
 	return results;
 }

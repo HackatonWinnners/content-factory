@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { aiRoutes } from "./routes/ai";
 import { healthRoutes } from "./routes/health";
+import { repoRoutes } from "./routes/repos";
 import { videoJobRoutes } from "./routes/video-jobs";
 
 const app = new Hono();
@@ -20,6 +21,7 @@ app.use(
 
 app.route("/api/v1/health", healthRoutes);
 app.route("/api/v1/ai", aiRoutes);
+app.route("/api/v1/repos", repoRoutes);
 app.route("/api/v1/video-jobs", videoJobRoutes);
 
 app.get("/", (c) => c.text("OK"));
