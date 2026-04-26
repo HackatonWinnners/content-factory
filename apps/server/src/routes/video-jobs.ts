@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { mkdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -42,12 +42,31 @@ const COMPOSER_PUBLIC_DIR = path.resolve(
 	"../../../../packages/composer/public",
 );
 
+// Music library lives OUTSIDE composer/public/ so it doesn't get bundled into
+// the Remotion serve bundle (each render copies only the chosen track in).
+const MUSIC_LIBRARY_DIR = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"../../../../packages/composer/music-library",
+);
 const MUSIC_TRACKS = [
 	"lofi.mp3",
 	"cinematic.mp3",
 	"ambient.mp3",
 	"upbeat.mp3",
 ] as const;
+type MusicTrack = (typeof MUSIC_TRACKS)[number];
+
+function pickMusicTrack(tone: {
+	formalCasual: number;
+	seriousPlayful: number;
+	directStorytelling: number;
+}): MusicTrack {
+	if (tone.formalCasual >= 65 && tone.seriousPlayful >= 60) return "upbeat.mp3";
+	if (tone.formalCasual <= 35 && tone.seriousPlayful <= 40)
+		return "cinematic.mp3";
+	if (tone.directStorytelling >= 65) return "ambient.mp3";
+	return "lofi.mp3";
+}
 
 export const videoJobRoutes = new Hono();
 
@@ -287,21 +306,31 @@ async function synthesizeAllVoiceovers(
 	});
 
 	const results = await runWithLimit(jobs, 2, ttsToAsset);
+
+	// Pick a single music track for this job and copy it into the bundle's
+	// public/music/ folder. Keeping only one file in there avoids bundling the
+	// whole 35MB library on every render.
+	const musicDir = path.join(COMPOSER_PUBLIC_DIR, "music");
+	await mkdir(musicDir, { recursive: true });
+	const chosenTrack = pickMusicTrack(tone);
+	const srcMusic = path.join(MUSIC_LIBRARY_DIR, chosenTrack);
+	const dstMusic = path.join(musicDir, chosenTrack);
+	let musicRel: string | undefined;
+	if (existsSync(srcMusic)) {
+		await copyFile(srcMusic, dstMusic);
+		musicRel = `music/${chosenTrack}`;
+	}
 	const hook = results[0];
 	if (!hook) throw new Error("missing hook tts result");
 	const cta = results[results.length - 1];
 	if (!cta) throw new Error("missing cta tts result");
 	const scenes = results.slice(1, -1);
 
-	const musicTrack = MUSIC_TRACKS.find((t) =>
-		existsSync(path.join(COMPOSER_PUBLIC_DIR, "music", t)),
-	);
-
 	return {
 		hook,
 		scenes,
 		cta,
-		musicPath: musicTrack ? `music/${musicTrack}` : undefined,
+		musicPath: musicRel,
 	};
 }
 
@@ -368,5 +397,14 @@ async function cleanupJobAssets(jobId: string): Promise<void> {
 		await rm(jobDir, { recursive: true, force: true });
 	} catch (e) {
 		console.warn(`cleanup ${jobId} failed:`, e);
+	}
+	// Wipe the per-render music too so the next job picks fresh.
+	const musicDir = path.join(COMPOSER_PUBLIC_DIR, "music");
+	for (const t of MUSIC_TRACKS) {
+		try {
+			await rm(path.join(musicDir, t), { force: true });
+		} catch {
+			// ignore
+		}
 	}
 }

@@ -73,3 +73,9 @@ test-results
 # AI SDK devtools generations
 .devtools
 .demo-output
+
+# Per-render artifacts inside the composer bundle (jobs audio + chosen music
+# track copied at render time)
+packages/composer/public/jobs
+packages/composer/public/music
+.claude/scheduled_tasks.lock
