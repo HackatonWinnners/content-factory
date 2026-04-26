@@ -34,6 +34,33 @@ export const MarketContextSchema = z.object({
 
 export type MarketContext = z.infer<typeof MarketContextSchema>;
 
+// Peec AI distribution-gap context. `available` is false when the API key is
+// missing or the brand has no Peec project — script writer skips it silently.
+export const PeecContextSchema = z.object({
+	available: z.boolean(),
+	brandName: z.string(),
+	ownBrand: z
+		.object({
+			visibility: z.number().min(0).max(1).nullable(),
+			shareOfVoice: z.number().min(0).max(1).nullable(),
+			sentiment: z.number().nullable(),
+			mentionCount: z.number().int().nonnegative().nullable(),
+		})
+		.nullable(),
+	competitors: z
+		.array(
+			z.object({
+				name: z.string(),
+				visibility: z.number().min(0).max(1).nullable(),
+				shareOfVoice: z.number().min(0).max(1).nullable(),
+			}),
+		)
+		.max(10),
+	opportunityDomains: z.array(z.string()).max(10),
+});
+
+export type PeecContext = z.infer<typeof PeecContextSchema>;
+
 export const BrandToneSchema = z.object({
 	formalCasual: z.number().min(0).max(100),
 	seriousPlayful: z.number().min(0).max(100),

@@ -1,6 +1,11 @@
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
-import type { BrandProfile, MarketContext, RepoSnapshot } from "./schemas";
+import type {
+	BrandProfile,
+	MarketContext,
+	PeecContext,
+	RepoSnapshot,
+} from "./schemas";
 import { type VideoScript, VideoScriptSchema } from "./schemas";
 
 // gemini-2.5-pro for higher script quality at the cost of some latency.
@@ -12,15 +17,17 @@ type Args = {
 	snapshot: RepoSnapshot;
 	brand: BrandProfile;
 	market: MarketContext;
+	peec?: PeecContext;
 };
 
 export async function writeScriptFromRepo({
 	snapshot,
 	brand,
 	market,
+	peec,
 }: Args): Promise<VideoScript> {
 	const system = systemPrompt(brand);
-	const user = userPrompt({ snapshot, market });
+	const user = userPrompt({ snapshot, market, peec });
 	return runOnce({ system, user });
 }
 
@@ -109,9 +116,11 @@ function systemPrompt(brand: BrandProfile): string {
 function userPrompt({
 	snapshot,
 	market,
+	peec,
 }: {
 	snapshot: RepoSnapshot;
 	market: MarketContext;
+	peec?: PeecContext;
 }): string {
 	const lines: string[] = [
 		"# Source repository",
@@ -144,6 +153,40 @@ function userPrompt({
 		);
 	}
 
+	if (peec?.available) {
+		lines.push(
+			"",
+			"## Peec AI — distribution-gap intelligence",
+			`Across AI search engines (ChatGPT, Perplexity, etc) over the last 30 days, here is how ${peec.brandName} stacks up against tracked competitors:`,
+		);
+		if (peec.ownBrand) {
+			lines.push(
+				`- ${peec.brandName} (you): visibility ${pct(peec.ownBrand.visibility)}, share-of-voice ${pct(peec.ownBrand.shareOfVoice)}` +
+					(peec.ownBrand.mentionCount
+						? `, ${peec.ownBrand.mentionCount.toLocaleString()} mentions`
+						: ""),
+			);
+		}
+		for (const c of peec.competitors) {
+			lines.push(
+				`- ${c.name}: visibility ${pct(c.visibility)}, share-of-voice ${pct(c.shareOfVoice)}`,
+			);
+		}
+		if (peec.opportunityDomains.length > 0) {
+			lines.push(
+				"",
+				`Distribution opportunity — these domains retrieve a lot of brand-relevant traffic but cite ${peec.brandName} less than 20% of the time:`,
+			);
+			for (const d of peec.opportunityDomains) {
+				lines.push(`- ${d}`);
+			}
+		}
+		lines.push(
+			"",
+			"This is the key signal: write a script that closes the visibility/share-of-voice gap. Where the brand is INVISIBLE relative to competitors, that's the angle. Lead with the unfair advantage that competitors can't claim, and frame the closing CTA so a viewer who sees this on TikTok / Reels / YouTube Shorts immediately remembers the brand the next time they ask an AI assistant about this category.",
+		);
+	}
+
 	lines.push(
 		"",
 		"# Your task",
@@ -151,6 +194,11 @@ function userPrompt({
 	);
 
 	return lines.filter((l) => l !== undefined).join("\n");
+}
+
+function pct(n: number | null | undefined): string {
+	if (typeof n !== "number" || Number.isNaN(n)) return "—";
+	return `${Math.round(n * 100)}%`;
 }
 
 function describeTone(brand: BrandProfile): string {

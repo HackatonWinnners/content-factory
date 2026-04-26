@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import {
 	BrandProfileSchema,
 	fetchMarketContext,
+	fetchPeecContext,
 	fetchRepoSnapshot,
 	parseRepoUrl,
 	type VideoScript,
@@ -220,14 +221,25 @@ async function runPipeline(
 	});
 
 	updateJob(jobId, { status: "researching", progress: 22 });
-	const market = await fetchMarketContext({
-		topic: `${snapshot.owner}/${snapshot.name} ${
-			snapshot.description ?? snapshot.primaryLanguage ?? ""
-		}`.trim(),
-	});
+	const [market, peec] = await Promise.all([
+		fetchMarketContext({
+			topic: `${snapshot.owner}/${snapshot.name} ${
+				snapshot.description ?? snapshot.primaryLanguage ?? ""
+			}`.trim(),
+		}),
+		// Peec runs in parallel — distribution-gap intelligence enriches the
+		// editorial step. Falls back to {available:false} if PEEC_API_KEY is
+		// missing or no project matches the brand name.
+		fetchPeecContext({ brandName: brand.name }),
+	]);
+	if (peec.available) {
+		console.log(
+			`[pipeline ${jobId}] peec: ${peec.brandName} vs ${peec.competitors.length} competitors, ${peec.opportunityDomains.length} opportunity domains`,
+		);
+	}
 
 	updateJob(jobId, { status: "scripting", progress: 38 });
-	const script = await writeScriptFromRepo({ snapshot, brand, market });
+	const script = await writeScriptFromRepo({ snapshot, brand, market, peec });
 	updateJob(jobId, { script });
 
 	updateJob(jobId, { status: "voicing", progress: 55 });
