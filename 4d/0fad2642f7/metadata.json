@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "4d0fad2642f7",
+  "strategy": "manual-commit",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/server/src/routes/video-jobs.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/4d/0fad2642f7/0/metadata.json",
+      "transcript": "/4d/0fad2642f7/0/full.jsonl",
+      "content_hash": "/4d/0fad2642f7/0/content_hash.txt",
+      "prompt": "/4d/0fad2642f7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 15,
+    "cache_creation_tokens": 75249,
+    "cache_read_tokens": 672489,
+    "output_tokens": 14918,
+    "api_call_count": 10
+  }
+}

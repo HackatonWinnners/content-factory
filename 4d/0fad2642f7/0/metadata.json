@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "4d0fad2642f7",
+  "session_id": "3a506f45-e492-4628-847b-5f1cda4b9a5c",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T01:57:43.289934Z",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/server/src/routes/video-jobs.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "6b19b80bdfcb",
+  "token_usage": {
+    "input_tokens": 15,
+    "cache_creation_tokens": 75249,
+    "cache_read_tokens": 672489,
+    "output_tokens": 14918,
+    "api_call_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T01:57:43.28369Z",
+    "agent_lines": 1,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1,
+    "total_lines_changed": 1,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
