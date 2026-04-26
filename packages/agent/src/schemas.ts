@@ -101,14 +101,14 @@ export const VideoSceneSchema = z.object({
 	text: z
 		.string()
 		.min(1)
-		.max(120)
+		.max(240)
 		.describe(
 			"Short text shown on screen — 1-2 lines max, no full sentences. TikTok caption style.",
 		),
 	voiceover: z
 		.string()
 		.min(1)
-		.max(400)
+		.max(800)
 		.describe(
 			"What the narrator says for this scene — natural spoken prose, 1-3 sentences, can be longer than the on-screen text.",
 		),
@@ -117,21 +117,21 @@ export const VideoSceneSchema = z.object({
 			value: z
 				.string()
 				.min(1)
-				.max(20)
+				.max(60)
 				.describe("Pre-formatted display value, e.g. '47k', '6×', '99.9%'"),
-			label: z.string().min(1).max(60).describe("What the number measures"),
+			label: z.string().min(1).max(120).describe("What the number measures"),
 		})
 		.optional()
 		.describe("Required when type='stat'."),
 	bullets: z
-		.array(z.string().min(1).max(80))
-		.max(5)
+		.array(z.string().min(1).max(160))
+		.max(6)
 		.optional()
-		.describe("Optional 2-5 short bullets for type='feature'."),
+		.describe("Optional 2-6 short bullets for type='feature'."),
 	comparison: z
 		.object({
-			them: z.string().min(1).max(80),
-			us: z.string().min(1).max(80),
+			them: z.string().min(1).max(200),
+			us: z.string().min(1).max(200),
 		})
 		.optional()
 		.describe("Required when type='comparison'."),
@@ -144,22 +144,22 @@ export const VideoScriptSchema = z.object({
 		text: z
 			.string()
 			.min(1)
-			.max(80)
+			.max(200)
 			.describe("Big punchy hook — 1 line, max ~6 words ideally."),
 		voiceover: z
 			.string()
 			.min(1)
-			.max(200)
+			.max(500)
 			.describe("Spoken hook — slightly longer than the on-screen line."),
 	}),
-	scenes: z.array(VideoSceneSchema).min(3).max(6),
+	scenes: z.array(VideoSceneSchema).min(3).max(8),
 	cta: z.object({
 		text: z
 			.string()
 			.min(1)
-			.max(60)
+			.max(160)
 			.describe("Closing call to action — short, punchy."),
-		voiceover: z.string().min(1).max(150),
+		voiceover: z.string().min(1).max(400),
 	}),
 });
 

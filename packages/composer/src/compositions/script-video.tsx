@@ -30,24 +30,24 @@ const sceneTypeEnum = z.enum([
 
 const sceneSchema = z.object({
 	type: sceneTypeEnum,
-	text: z.string().min(1).max(120),
-	voiceover: z.string().min(1).max(400),
+	text: z.string().min(1).max(240),
+	voiceover: z.string().min(1).max(800),
 	stat: z
 		.object({
-			value: z.string().min(1).max(20),
-			label: z.string().min(1).max(60),
+			value: z.string().min(1).max(60),
+			label: z.string().min(1).max(120),
 		})
 		.optional(),
-	bullets: z.array(z.string().min(1).max(80)).max(5).optional(),
+	bullets: z.array(z.string().min(1).max(160)).max(6).optional(),
 	comparison: z
-		.object({ them: z.string().min(1).max(80), us: z.string().min(1).max(80) })
+		.object({ them: z.string().min(1).max(200), us: z.string().min(1).max(200) })
 		.optional(),
 });
 
 const scriptSchema = z.object({
-	hook: z.object({ text: z.string().min(1).max(80), voiceover: z.string() }),
-	scenes: z.array(sceneSchema).min(3).max(6),
-	cta: z.object({ text: z.string().min(1).max(60), voiceover: z.string() }),
+	hook: z.object({ text: z.string().min(1).max(200), voiceover: z.string() }),
+	scenes: z.array(sceneSchema).min(3).max(8),
+	cta: z.object({ text: z.string().min(1).max(160), voiceover: z.string() }),
 });
 
 const brandSchema = z.object({
