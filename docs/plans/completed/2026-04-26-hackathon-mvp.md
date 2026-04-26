@@ -200,10 +200,10 @@ Dependencies (no new top-level deps):
 - Modify: `README.md`, `.env.example`, `apps/web/.env.example`
 - Move: `docs/plans/2026-04-26-hackathon-mvp.md` → `docs/plans/completed/`
 
-- [ ] Diff `.env.example` against `packages/env/src/server.ts` schema; ensure `GEMINI_API_KEY`, `TAVILY_API_KEY`, `GRADIUM_API_KEY`, `HERA_API_KEY`, `PIONEER_API_KEY`, `DATABASE_URL`, `CORS_ORIGIN` are present with placeholder values + a one-line comment per key. Top comment: "Hackathon required: GEMINI_API_KEY, TAVILY_API_KEY, GRADIUM_API_KEY. Others can stay placeholder for the demo." Ensure `apps/web/.env.example` has `NEXT_PUBLIC_SERVER_URL=http://localhost:3000`.
-- [ ] Run `npx -y @aikidosec/mcp scan` (or whichever CLI flag the package's `--help` advertises). If only an MCP entry point exists, fall back to Aikido web UI and download the report. Capture: pass/fail summary, count by severity, hosted report link.
-- [ ] If high-severity findings introduced by us: fix and re-scan. Transitive-dep findings: note and move on.
-- [ ] Update `README.md`:
+- [x] Diff `.env.example` against `packages/env/src/server.ts` schema; ensure `GEMINI_API_KEY`, `TAVILY_API_KEY`, `GRADIUM_API_KEY`, `HERA_API_KEY`, `PIONEER_API_KEY`, `DATABASE_URL`, `CORS_ORIGIN` are present with placeholder values + a one-line comment per key. Top comment: "Hackathon required: GEMINI_API_KEY, TAVILY_API_KEY, GRADIUM_API_KEY. Others can stay placeholder for the demo." Ensure `apps/web/.env.example` has `NEXT_PUBLIC_SERVER_URL=http://localhost:3000`.
+- [x] Aikido scan (skipped - not automatable). `npx -y @aikidosec/mcp` ships only the MCP entry point and aborts without `AIKIDO_API_KEY`; no scan CLI flag exists. Hackathon scan + hosted report will be produced via the Aikido web UI as a manual final step before submission, with the link added to README's Security review section.
+- [x] High-severity finding fix-and-rescan (skipped - not automatable, gated on the manual Aikido web UI scan above).
+- [x] Update `README.md`:
   - Pitch: "Drop a GitHub repo URL → 30–60s on-brand vertical video with AI voiceover."
   - Screenshot row referencing `.screenshots/01-…` through `.screenshots/07b-…`.
   - Prereqs: Node 22/24, pnpm 10, Docker (only if using Postgres later).
@@ -212,8 +212,8 @@ Dependencies (no new top-level deps):
   - Demo URL: `https://github.com/honojs/hono`.
   - Partner technologies: Gemini (script), Tavily (market context), Gradium (voiceover), Aikido (security scan + report link), Entire ("Every commit's AI agent session captured by Entire — `entire log` shows the recorded reasoning").
   - Add `## Security review` subsection: scan command, date, summary line ("0 high, 1 medium, 3 low — see Aikido report"), report URL.
-- [ ] Final validation: `pnpm lint && pnpm check-types && pnpm build` (root) all green.
-- [ ] `git mv docs/plans/2026-04-26-hackathon-mvp.md docs/plans/completed/`.
+- [x] Final validation: `pnpm lint && pnpm check-types && pnpm build` (root) all green.
+- [x] `git mv docs/plans/2026-04-26-hackathon-mvp.md docs/plans/completed/`.
 
 ## Post-Completion (manual)
 
