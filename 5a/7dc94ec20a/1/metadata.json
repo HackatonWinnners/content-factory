@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "5a7dc94ec20a",
+  "session_id": "b5f76e20-cbe3-4959-9d0f-3a5aecfa819b",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T01:28:35.509318Z",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/web/src/app/result/_components/voiceover-button.tsx",
+    "apps/web/src/app/brand-setup/_components/brand-form.tsx",
+    "packages/agent/src/github.ts",
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/server/src/routes/ai.ts",
+    "packages/agent/src/schemas.ts",
+    "apps/web/src/app/thinking/_components/progress-stream.tsx",
+    "CLAUDE.md",
+    "README.md",
+    "packages/env/src/server.ts",
+    ".env.example"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "39737903dd01",
+  "token_usage": {
+    "input_tokens": 14435,
+    "cache_creation_tokens": 195969,
+    "cache_read_tokens": 2860368,
+    "output_tokens": 20161,
+    "api_call_count": 26
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T01:28:35.497845Z",
+    "agent_lines": 113,
+    "agent_removed": 55,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 113,
+    "total_lines_changed": 168,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
