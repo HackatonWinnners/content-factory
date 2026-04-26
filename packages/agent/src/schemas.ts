@@ -56,16 +56,84 @@ export const BrandProfileSchema = z.object({
 
 export type BrandProfile = z.infer<typeof BrandProfileSchema>;
 
+// Scene types — each maps to a distinct composer layout + background motion.
+export const SceneTypeEnum = z.enum([
+	"stat",
+	"fact",
+	"feature",
+	"comparison",
+	"quote",
+]);
+export type SceneType = z.infer<typeof SceneTypeEnum>;
+
+// Single scene shape. Required fields are common, type-specific data is in
+// optional sub-objects. The narrator says `voiceover`; the screen shows `text`.
+// Visible text is short (TikTok-style 1-2 lines); voiceover is longer prose.
 export const VideoSceneSchema = z.object({
-	text: z.string().min(1),
-	bullets: z.array(z.string()).max(5).optional(),
-	durationSec: z.number().min(2).max(8),
+	type: SceneTypeEnum,
+	text: z
+		.string()
+		.min(1)
+		.max(120)
+		.describe(
+			"Short text shown on screen — 1-2 lines max, no full sentences. TikTok caption style.",
+		),
+	voiceover: z
+		.string()
+		.min(1)
+		.max(400)
+		.describe(
+			"What the narrator says for this scene — natural spoken prose, 1-3 sentences, can be longer than the on-screen text.",
+		),
+	stat: z
+		.object({
+			value: z
+				.string()
+				.min(1)
+				.max(20)
+				.describe("Pre-formatted display value, e.g. '47k', '6×', '99.9%'"),
+			label: z.string().min(1).max(60).describe("What the number measures"),
+		})
+		.optional()
+		.describe("Required when type='stat'."),
+	bullets: z
+		.array(z.string().min(1).max(80))
+		.max(5)
+		.optional()
+		.describe("Optional 2-5 short bullets for type='feature'."),
+	comparison: z
+		.object({
+			them: z.string().min(1).max(80),
+			us: z.string().min(1).max(80),
+		})
+		.optional()
+		.describe("Required when type='comparison'."),
 });
 
+export type VideoScene = z.infer<typeof VideoSceneSchema>;
+
 export const VideoScriptSchema = z.object({
-	hook: z.string().min(1),
-	scenes: z.array(VideoSceneSchema).min(4).max(8),
-	closingCta: z.string().min(1),
+	hook: z.object({
+		text: z
+			.string()
+			.min(1)
+			.max(80)
+			.describe("Big punchy hook — 1 line, max ~6 words ideally."),
+		voiceover: z
+			.string()
+			.min(1)
+			.max(200)
+			.describe("Spoken hook — slightly longer than the on-screen line."),
+	}),
+	scenes: z.array(VideoSceneSchema).min(3).max(6),
+	cta: z.object({
+		text: z
+			.string()
+			.min(1)
+			.max(60)
+			.describe("Closing call to action — short, punchy."),
+		voiceover: z.string().min(1).max(150),
+	}),
 });
 
 export type VideoScript = z.infer<typeof VideoScriptSchema>;

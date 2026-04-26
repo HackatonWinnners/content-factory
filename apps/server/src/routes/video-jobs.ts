@@ -1,26 +1,53 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
+import { fileURLToPath } from "node:url";
 import {
 	BrandProfileSchema,
 	fetchMarketContext,
 	fetchRepoSnapshot,
 	parseRepoUrl,
+	type VideoScript,
 	writeScriptFromRepo,
 } from "@content-factory/agent";
 import { renderVideo } from "@content-factory/composer";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { synthesizeVoice } from "../lib/gradium";
-import { createJob, getJob, type Job, subscribe, updateJob } from "../lib/jobs";
+import { readWavDurationSeconds } from "../lib/audio";
+import { pickVoiceForTone, synthesizeVoice } from "../lib/gradium";
+import {
+	createJob,
+	getJob,
+	type Job,
+	type JobAssets,
+	subscribe,
+	updateJob,
+	type VoiceAsset,
+} from "../lib/jobs";
 
 const CreateJobSchema = z.object({
 	kind: z.enum(["git", "linear", "pdf"]),
 	ref: z.string().min(1).max(500),
 	brand: BrandProfileSchema,
 });
+
+// Composer's public/ folder. We write per-job audio files here before rendering
+// so Remotion's bundler picks them up via staticFile(). Resolved relative to
+// this source file at runtime.
+const COMPOSER_PUBLIC_DIR = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"../../../../packages/composer/public",
+);
+
+const MUSIC_TRACKS = [
+	"lofi.mp3",
+	"cinematic.mp3",
+	"ambient.mp3",
+	"upbeat.mp3",
+] as const;
 
 export const videoJobRoutes = new Hono();
 
@@ -53,6 +80,7 @@ videoJobRoutes.post("/", async (c) => {
 
 	void runPipeline(job.id, ref, parsedRepo, brand).catch((e) => {
 		const msg = e instanceof Error ? e.message : String(e);
+		console.error(`pipeline ${job.id} failed:`, e);
 		updateJob(job.id, { status: "failed", error: msg });
 	});
 
@@ -62,13 +90,7 @@ videoJobRoutes.post("/", async (c) => {
 videoJobRoutes.get("/:id", (c) => {
 	const job = getJob(c.req.param("id"));
 	if (!job) return c.json({ error: "not found" }, 404);
-	const { videoPath, audioPath, script, ...publicJob } = job;
-	return c.json({
-		...publicJob,
-		hasVideo: Boolean(videoPath),
-		hasAudio: Boolean(audioPath),
-		hasScript: Boolean(script),
-	});
+	return c.json(toPublicJob(job));
 });
 
 videoJobRoutes.get("/:id/events", (c) => {
@@ -80,19 +102,9 @@ videoJobRoutes.get("/:id/events", (c) => {
 		let closed = false;
 		let lastSent: string | null = null;
 
-		const toPublic = (job: Job) => {
-			const { videoPath, audioPath, script, ...rest } = job;
-			return {
-				...rest,
-				hasVideo: Boolean(videoPath),
-				hasAudio: Boolean(audioPath),
-				hasScript: Boolean(script),
-			};
-		};
-
 		const send = async (job: Job) => {
 			if (closed) return;
-			const data = JSON.stringify(toPublic(job));
+			const data = JSON.stringify(toPublicJob(job));
 			if (data === lastSent) return;
 			lastSent = data;
 			try {
@@ -125,8 +137,6 @@ videoJobRoutes.get("/:id/events", (c) => {
 					.catch(() => finish());
 			});
 
-			// Re-emit current state after subscribing — covers updates that
-			// landed between the initial snapshot and listener registration.
 			const post = getJob(id);
 			if (post) {
 				send(post)
@@ -155,74 +165,22 @@ videoJobRoutes.get("/:id/video", (c) => {
 		headers: {
 			"content-type": "video/mp4",
 			"content-length": String(size),
-		},
-	});
-});
-
-const inflightVoiceover = new Map<string, Promise<string>>();
-
-// Gradium TTS rejects payloads beyond a few thousand chars. Cap defensively.
-const NARRATION_MAX_CHARS = 4_000;
-
-videoJobRoutes.post("/:id/voiceover", async (c) => {
-	const id = c.req.param("id");
-	const job = getJob(id);
-	if (!job) return c.json({ error: "not found" }, 404);
-
-	if (job.audioPath && existsSync(job.audioPath)) {
-		return c.json({ audioUrl: `/api/v1/video-jobs/${id}/audio` });
-	}
-
-	if (!job.script) {
-		return c.json({ error: "script not ready" }, 404);
-	}
-
-	const narration = [
-		job.script.hook,
-		...job.script.scenes.map((s) => s.text),
-		job.script.closingCta,
-	]
-		.join(" ")
-		.slice(0, NARRATION_MAX_CHARS);
-
-	let pending = inflightVoiceover.get(id);
-	if (!pending) {
-		pending = synthesizeVoice({ jobId: id, text: narration })
-			.then(({ audioPath }) => {
-				updateJob(id, { audioPath });
-				return audioPath;
-			})
-			.finally(() => {
-				inflightVoiceover.delete(id);
-			});
-		inflightVoiceover.set(id, pending);
-	}
-
-	try {
-		await pending;
-		return c.json({ audioUrl: `/api/v1/video-jobs/${id}/audio` });
-	} catch (e) {
-		console.error(`voiceover ${id} failed:`, e);
-		return c.json({ error: "voiceover synthesis failed" }, 502);
-	}
-});
-
-videoJobRoutes.get("/:id/audio", (c) => {
-	const job = getJob(c.req.param("id"));
-	if (!job?.audioPath || !existsSync(job.audioPath)) {
-		return c.json({ error: "not found" }, 404);
-	}
-	const size = statSync(job.audioPath).size;
-	const nodeStream = createReadStream(job.audioPath);
-	const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
-	return new Response(webStream, {
-		headers: {
-			"content-type": "audio/wav",
-			"content-length": String(size),
 			"cache-control": "no-store",
 		},
 	});
 });
+
+// Public job snapshot — strip filesystem paths and the heavy script object.
+function toPublicJob(job: Job) {
+	const { videoPath, audioPath, script, assets, ...rest } = job;
+	return {
+		...rest,
+		hasVideo: Boolean(videoPath),
+		hasAudio: Boolean(audioPath),
+		hasScript: Boolean(script),
+		hasAssets: Boolean(assets),
+	};
+}
 
 async function runPipeline(
 	jobId: string,
@@ -232,36 +190,50 @@ async function runPipeline(
 ): Promise<void> {
 	updateJob(jobId, {
 		status: "extracting",
-		progress: 10,
+		progress: 8,
 		owner: parsedRepo.owner,
 		name: parsedRepo.name,
 	});
 	const snapshot = await fetchRepoSnapshot(ref);
+	updateJob(jobId, {
+		stars: snapshot.stars,
+		primaryLanguage: snapshot.primaryLanguage ?? undefined,
+	});
 
-	updateJob(jobId, { status: "researching", progress: 25 });
+	updateJob(jobId, { status: "researching", progress: 22 });
 	const market = await fetchMarketContext({
 		topic: `${snapshot.owner}/${snapshot.name} ${
 			snapshot.description ?? snapshot.primaryLanguage ?? ""
 		}`.trim(),
 	});
 
-	updateJob(jobId, { status: "scripting", progress: 45 });
+	updateJob(jobId, { status: "scripting", progress: 38 });
 	const script = await writeScriptFromRepo({ snapshot, brand, market });
 	updateJob(jobId, { script });
 
-	updateJob(jobId, { status: "rendering", progress: 65 });
+	updateJob(jobId, { status: "voicing", progress: 55 });
+	const assets = await synthesizeAllVoiceovers(jobId, script, brand.tone);
+	updateJob(jobId, { assets });
+
+	updateJob(jobId, { status: "rendering", progress: 70 });
 	const videoPath = path.join(os.tmpdir(), `cf-${jobId}.mp4`);
-	let lastProgressTick = 65;
+	let lastProgressTick = 70;
 	await renderVideo({
 		compositionId: "script-video",
 		inputProps: {
 			script,
-			brand,
-			repo: { owner: snapshot.owner, name: snapshot.name },
+			brand: { name: brand.name, tone: brand.tone },
+			assets: assetsToInputProps(jobId, assets),
+			repo: {
+				owner: snapshot.owner,
+				name: snapshot.name,
+				stars: snapshot.stars,
+				primaryLanguage: snapshot.primaryLanguage ?? undefined,
+			},
 		},
 		outputLocation: videoPath,
 		onProgress: (p) => {
-			const next = 65 + Math.round(p * 25);
+			const next = 70 + Math.round(p * 28);
 			if (next !== lastProgressTick) {
 				lastProgressTick = next;
 				updateJob(jobId, { progress: next });
@@ -274,4 +246,127 @@ async function runPipeline(
 		progress: 100,
 		videoPath,
 	});
+
+	// Best-effort cleanup of per-job audio dir from public/. The MP4 already
+	// has them embedded so we don't need them on disk anymore.
+	void cleanupJobAssets(jobId);
+}
+
+async function synthesizeAllVoiceovers(
+	jobId: string,
+	script: VideoScript,
+	tone: z.infer<typeof BrandProfileSchema>["tone"],
+): Promise<JobAssets> {
+	const jobDir = path.join(COMPOSER_PUBLIC_DIR, "jobs", jobId);
+	await mkdir(jobDir, { recursive: true });
+
+	const voiceId = pickVoiceForTone(tone);
+
+	// Build TTS jobs for hook + every scene + cta. Gradium caps concurrency at
+	// 3 active sessions, so we run with a small pool to stay safely under that.
+	type TtsJob = { text: string; outputPath: string; voiceId: string };
+	const jobs: TtsJob[] = [];
+	jobs.push({
+		text: script.hook.voiceover,
+		outputPath: path.join(jobDir, "hook.wav"),
+		voiceId,
+	});
+	for (let i = 0; i < script.scenes.length; i++) {
+		const scene = script.scenes[i];
+		if (!scene) continue;
+		jobs.push({
+			text: scene.voiceover,
+			outputPath: path.join(jobDir, `scene-${i}.wav`),
+			voiceId,
+		});
+	}
+	jobs.push({
+		text: script.cta.voiceover,
+		outputPath: path.join(jobDir, "cta.wav"),
+		voiceId,
+	});
+
+	const results = await runWithLimit(jobs, 2, ttsToAsset);
+	const hook = results[0];
+	if (!hook) throw new Error("missing hook tts result");
+	const cta = results[results.length - 1];
+	if (!cta) throw new Error("missing cta tts result");
+	const scenes = results.slice(1, -1);
+
+	const musicTrack = MUSIC_TRACKS.find((t) =>
+		existsSync(path.join(COMPOSER_PUBLIC_DIR, "music", t)),
+	);
+
+	return {
+		hook,
+		scenes,
+		cta,
+		musicPath: musicTrack ? `music/${musicTrack}` : undefined,
+	};
+}
+
+async function ttsToAsset({
+	text,
+	outputPath,
+	voiceId,
+}: {
+	text: string;
+	outputPath: string;
+	voiceId: string;
+}): Promise<VoiceAsset> {
+	await synthesizeVoice({ text, outputPath, voiceId });
+	const durationSec = readWavDurationSeconds(outputPath);
+	return { audioPath: outputPath, durationSec };
+}
+
+// Tiny concurrency-limited mapper. Resolves results in input order.
+async function runWithLimit<T, R>(
+	items: T[],
+	limit: number,
+	worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+	const results: R[] = new Array(items.length);
+	let cursor = 0;
+	const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+		while (true) {
+			const i = cursor++;
+			if (i >= items.length) return;
+			const item = items[i];
+			if (item === undefined) continue;
+			results[i] = await worker(item);
+		}
+	});
+	await Promise.all(runners);
+	return results;
+}
+
+// Convert local filesystem paths to staticFile-relative paths the composer
+// expects ("jobs/<id>/hook.wav", "music/lofi.mp3"). Remotion's bundler
+// resolves these against the composer's public/ folder.
+function assetsToInputProps(jobId: string, assets: JobAssets) {
+	const rel = (p: string): string => `jobs/${jobId}/${path.basename(p)}`;
+	return {
+		hook: {
+			audioPath: rel(assets.hook.audioPath),
+			durationSec: assets.hook.durationSec,
+		},
+		scenes: assets.scenes.map((s) => ({
+			audioPath: rel(s.audioPath),
+			durationSec: s.durationSec,
+		})),
+		cta: {
+			audioPath: rel(assets.cta.audioPath),
+			durationSec: assets.cta.durationSec,
+		},
+		musicPath: assets.musicPath,
+	};
+}
+
+async function cleanupJobAssets(jobId: string): Promise<void> {
+	const jobDir = path.join(COMPOSER_PUBLIC_DIR, "jobs", jobId);
+	try {
+		await rm(jobDir, { recursive: true, force: true });
+	} catch (e) {
+		console.warn(`cleanup ${jobId} failed:`, e);
+	}
 }

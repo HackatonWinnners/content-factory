@@ -29,6 +29,12 @@ export async function renderVideo(opts: RenderOptions): Promise<void> {
 		codec: "h264",
 		outputLocation: opts.outputLocation,
 		inputProps: opts.inputProps,
+		// Cap parallel Chromium instances to keep peak RAM bounded — a M1/M2
+		// laptop runs out of heap somewhere between 4-6 concurrent renders when
+		// the composition includes per-scene Audio + animated backgrounds.
+		concurrency: 2,
+		// Tame Chrome's per-renderer overhead.
+		chromiumOptions: { gl: "swangle" },
 		onProgress: opts.onProgress
 			? ({ progress }) => opts.onProgress?.(progress)
 			: undefined,

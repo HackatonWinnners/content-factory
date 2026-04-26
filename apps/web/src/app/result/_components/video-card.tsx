@@ -7,8 +7,6 @@ import { useEffect, useState } from "react";
 
 import { type BrandProfile, loadBrandProfile } from "@/lib/brand-profile";
 
-import { VoiceoverButton } from "./voiceover-button";
-
 type JobStatus =
 	| "pending"
 	| "extracting"
@@ -306,8 +304,6 @@ export function VideoCard({ jobId }: { jobId: string }) {
 							</div>
 						</div>
 					</div>
-
-					<VoiceoverButton jobId={jobId} disabled={!ready} />
 
 					<div className="flex flex-wrap items-center gap-3">
 						<a

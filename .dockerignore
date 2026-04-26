@@ -1,0 +1,52 @@
+# Dependencies
+**/node_modules
+.pnp
+.pnp.js
+.pnpm-store
+
+# Build outputs
+**/dist
+**/build
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+
+# Env / secrets — supply at runtime via Dokku config
+.env
+.env.*
+!.env.example
+
+# VCS / IDE
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Logs
+**/*.log
+
+# Tests / Playwright
+coverage
+.playwright-mcp
+.screenshots
+playwright-report
+test-results
+
+# Ralph
+.ralphex
+docs/plans
+
+# Misc dev artefacts
+.cache
+tmp
+temp
+.devtools
+.demo-output
+
+# Per-job runtime data — created in container
+packages/composer/public/jobs
+
+# Self
+**/Dockerfile
+.dockerignore

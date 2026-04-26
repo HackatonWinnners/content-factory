@@ -3,13 +3,10 @@ import { generateObject } from "ai";
 import type { BrandProfile, MarketContext, RepoSnapshot } from "./schemas";
 import { type VideoScript, VideoScriptSchema } from "./schemas";
 
-const MODEL_ID = "gemini-2.5-flash";
-// Composer adds a hook (2.5s) + closing (2s) on top of the scene timeline.
-// Keep these in sync with packages/composer/src/compositions/script-video.tsx.
-const COMPOSER_PADDING_SEC = 4.5;
-const MIN_TOTAL_SEC = 30 - COMPOSER_PADDING_SEC;
-const MAX_TOTAL_SEC = 60 - COMPOSER_PADDING_SEC;
-const GEMINI_TIMEOUT_MS = 60_000;
+// gemini-2.5-pro for higher script quality at the cost of some latency.
+// Worth it for the demo; per-job cost is still cents.
+const MODEL_ID = "gemini-2.5-pro";
+const GEMINI_TIMEOUT_MS = 90_000;
 
 type Args = {
 	snapshot: RepoSnapshot;
@@ -24,26 +21,7 @@ export async function writeScriptFromRepo({
 }: Args): Promise<VideoScript> {
 	const system = systemPrompt(brand);
 	const user = userPrompt({ snapshot, market });
-
-	const first = await runOnce({ system, user });
-	if (
-		totalSeconds(first) >= MIN_TOTAL_SEC &&
-		totalSeconds(first) <= MAX_TOTAL_SEC
-	) {
-		return first;
-	}
-
-	const retryUser = `${user}\n\nIMPORTANT: previous draft totalled ${totalSeconds(
-		first,
-	)}s of scenes. The sum of all scenes' durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC} seconds (we add ${COMPOSER_PADDING_SEC}s of branding so final video is 30-60s).`;
-	const second = await runOnce({ system, user: retryUser });
-	const secs = totalSeconds(second);
-	if (secs < MIN_TOTAL_SEC || secs > MAX_TOTAL_SEC) {
-		console.warn(
-			`[agent.script] retry still out-of-bounds: ${secs}s of scenes (target ${MIN_TOTAL_SEC}-${MAX_TOTAL_SEC}s)`,
-		);
-	}
-	return second;
+	return runOnce({ system, user });
 }
 
 async function runOnce({
@@ -61,7 +39,7 @@ async function runOnce({
 			schema: VideoScriptSchema,
 			schemaName: "VideoScript",
 			schemaDescription:
-				"Vertical short-form video script with hook + scenes + CTA",
+				"Vertical short-form video script — TikTok/Reels format. Hook + 3-6 scenes + CTA. Each scene has a `type`, short on-screen `text`, and longer spoken `voiceover`.",
 			system,
 			prompt: user,
 			abortSignal: controller.signal,
@@ -79,23 +57,53 @@ async function runOnce({
 	}
 }
 
-function totalSeconds(script: VideoScript): number {
-	return script.scenes.reduce((acc, s) => acc + s.durationSec, 0);
-}
-
 function systemPrompt(brand: BrandProfile): string {
 	const tone = describeTone(brand);
 	return [
-		`You are a video script writer for the brand "${brand.name}".`,
-		`Voice: ${brand.voice}.`,
-		`Tone adjectives: ${tone}.`,
+		`You are a senior short-form video scriptwriter for the brand "${brand.name}".`,
+		`Brand voice: ${brand.voice}`,
+		`Tone: ${tone}.`,
 		brand.rules?.dos?.length ? `Do: ${brand.rules.dos.join("; ")}.` : "",
-		brand.rules?.donts?.length ? `Don't: ${brand.rules.donts.join("; ")}.` : "",
-		`Output a vertical short-form script: a punchy hook, 4-8 scenes (each 2-8s), and a closing CTA. The sum of scene durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC} (the renderer adds ${COMPOSER_PADDING_SEC}s of branding so the final video is 30-60s).`,
-		"Every scene needs concrete user-facing facts pulled from the source. No vague filler.",
+		brand.rules?.donts?.length ? `Avoid: ${brand.rules.donts.join("; ")}.` : "",
+		"",
+		"# Format",
+		"You write 30-60 second vertical videos in the style of TikTok / Instagram Reels — fast, dense, every scene earns its time.",
+		"",
+		"Output a JSON object matching VideoScriptSchema with exactly these parts:",
+		"- hook: { text, voiceover }",
+		"- scenes: 3-6 scenes",
+		"- cta: { text, voiceover }",
+		"",
+		"# Scene types — pick the right one for each beat",
+		"- 'stat'       — one big number that creates curiosity (stars, perf gain, downloads, age). Provide stat.value (formatted, e.g. '47k', '6×', '99.9%') and stat.label.",
+		"- 'fact'       — a single concrete factoid sentence about the project. Use sparingly — at most one per script.",
+		"- 'feature'    — one capability of the project. Optionally 2-3 short bullets.",
+		"- 'comparison' — vs the status quo. Provide comparison.them and comparison.us — same length, parallel structure.",
+		"- 'quote'      — a punchy line pulled or paraphrased from the README / commits.",
+		"",
+		"# CRITICAL — text vs voiceover",
+		"- `text` is what's BURNED ONTO THE VIDEO. Keep it under ~6 words. No full sentences. Caps are fine. This is a TikTok caption.",
+		"- `voiceover` is what the NARRATOR SAYS. Natural spoken prose, 1-3 sentences. Can elaborate beyond the on-screen text.",
+		"- Example — text: 'Built for the edge.' voiceover: 'Hono runs on Cloudflare Workers, Deno, Bun, and Node — write your API once, ship it anywhere with sub-millisecond cold starts.'",
+		"",
+		"# Hard rules",
+		"- Every scene MUST cite a specific concrete detail from the source data — a number, a code symbol, a feature name, a commit. No filler. No 'leverages', 'empowers', 'unlocks'. No marketing bullshit.",
+		"- Open with the strongest hook you have. Often a 'stat' scene works better as opener than a generic phrase.",
+		"- Order scenes for momentum: hook → curiosity → meat → punch.",
+		"- Close with a clear, specific CTA — what should the viewer do right now?",
+		"",
+		"# Reference example (for shape, not content)",
+		"hook: { text: '47,000 stars. Why?', voiceover: 'Forty-seven thousand developers starred this repo last year. Here\\'s what makes it different.' }",
+		"scenes: [",
+		"  { type: 'stat', text: '14kB', voiceover: 'The entire framework is fourteen kilobytes — smaller than your average favicon.', stat: { value: '14kB', label: 'core, zero dependencies' } },",
+		"  { type: 'feature', text: 'Runs anywhere JS runs.', voiceover: 'One codebase, four runtimes — Workers, Deno, Bun, Node. Write your handler once, deploy it anywhere.', bullets: ['Cloudflare Workers', 'Bun', 'Deno', 'Node 22+'] },",
+		"  { type: 'comparison', text: 'Express vs Hono', voiceover: 'Express ships forty-five megabytes of dependencies. Hono ships zero. Same DX, fraction of the cold start.', comparison: { them: 'Express · 45 MB · 350ms cold start', us: 'Hono · 14 kB · 4ms cold start' } },",
+		"  { type: 'quote', text: '\"Type-safe by default.\"', voiceover: 'Every route is fully typed end-to-end — request, response, params. No code generation, no runtime overhead.' }",
+		"]",
+		"cta: { text: 'Try Hono today.', voiceover: 'Run npm install hono and you\\'ve got an API in five lines.' }",
 	]
 		.filter(Boolean)
-		.join(" ");
+		.join("\n");
 }
 
 function userPrompt({
@@ -106,34 +114,41 @@ function userPrompt({
 	market: MarketContext;
 }): string {
 	const lines: string[] = [
-		`Repo: ${snapshot.owner}/${snapshot.name} (${snapshot.stars}★)`,
+		"# Source repository",
+		`${snapshot.owner}/${snapshot.name} — ${snapshot.stars.toLocaleString()} stars`,
 		snapshot.description ? `Description: ${snapshot.description}` : "",
 		snapshot.primaryLanguage
 			? `Primary language: ${snapshot.primaryLanguage}`
 			: "",
 		snapshot.topics.length ? `Topics: ${snapshot.topics.join(", ")}` : "",
 		"",
-		"README excerpt:",
+		"## README excerpt",
 		snapshot.readme.slice(0, 8_000),
 	];
 
 	if (snapshot.recentCommits.length > 0) {
-		lines.push("", "Recent commits:");
-		for (const c of snapshot.recentCommits.slice(0, 8)) {
+		lines.push("", "## Recent user-facing commits");
+		for (const c of snapshot.recentCommits.slice(0, 10)) {
 			lines.push(`- ${c.message}`);
 		}
 	}
 
 	if (market.results.length > 0) {
-		lines.push("", "Competitors / similar projects in the wild:");
+		lines.push("", "## Competitor / market context");
 		for (const r of market.results) {
 			lines.push(`- ${r.title} — ${r.snippet.slice(0, 200)}`);
 		}
 		lines.push(
 			"",
-			"Use the competitor context to highlight a unique angle this project owns.",
+			"Use the competitor context to identify a unique angle — what does THIS project do that the others don't?",
 		);
 	}
+
+	lines.push(
+		"",
+		"# Your task",
+		"Write the video script. Pick scene types deliberately. Cite specific facts. No filler.",
+	);
 
 	return lines.filter((l) => l !== undefined).join("\n");
 }

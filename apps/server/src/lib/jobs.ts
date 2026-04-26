@@ -11,18 +11,33 @@ export type JobStatus =
 	| "done"
 	| "failed";
 
+export interface VoiceAsset {
+	audioPath: string;
+	durationSec: number;
+}
+
+export interface JobAssets {
+	hook: VoiceAsset;
+	scenes: VoiceAsset[];
+	cta: VoiceAsset;
+	musicPath?: string;
+}
+
 export interface Job {
 	id: string;
 	status: JobStatus;
 	progress: number;
 	message?: string;
 	script?: VideoScript;
+	assets?: JobAssets;
 	videoPath?: string;
 	audioPath?: string;
 	error?: string;
 	ref?: string;
 	owner?: string;
 	name?: string;
+	stars?: number;
+	primaryLanguage?: string;
 }
 
 type Listener = (job: Job) => void;
@@ -38,12 +53,15 @@ export function createJob(init: Partial<Job> = {}): Job {
 		progress: init.progress ?? 0,
 		message: init.message,
 		script: init.script,
+		assets: init.assets,
 		videoPath: init.videoPath,
 		audioPath: init.audioPath,
 		error: init.error,
 		ref: init.ref,
 		owner: init.owner,
 		name: init.name,
+		stars: init.stars,
+		primaryLanguage: init.primaryLanguage,
 	};
 	jobs.set(id, job);
 	return job;

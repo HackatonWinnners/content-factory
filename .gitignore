@@ -72,3 +72,4 @@ test-results
 
 # AI SDK devtools generations
 .devtools
+.demo-output

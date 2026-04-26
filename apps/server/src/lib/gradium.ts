@@ -11,20 +11,33 @@ const DEFAULT_VOICE_ID = "YTpq7expH9539ERJ";
 const TIMEOUT_MS = 60_000;
 
 export interface SynthesizeArgs {
-	jobId: string;
 	text: string;
 	voiceId?: string;
+	// Caller chooses where to write. If not provided, falls back to a tmpdir
+	// path keyed by jobId (legacy single-take behaviour).
+	outputPath?: string;
+	jobId?: string;
 }
 
 export interface SynthesizeResult {
 	audioPath: string;
+	bytes: number;
 }
 
 export async function synthesizeVoice({
-	jobId,
 	text,
 	voiceId,
+	outputPath,
+	jobId,
 }: SynthesizeArgs): Promise<SynthesizeResult> {
+	const target =
+		outputPath ??
+		(jobId
+			? path.join(os.tmpdir(), `cf-${jobId}-voice.wav`)
+			: (() => {
+					throw new Error("synthesizeVoice requires outputPath or jobId");
+				})());
+
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -61,9 +74,8 @@ export async function synthesizeVoice({
 	}
 
 	const buf = Buffer.from(await res.arrayBuffer());
-	const audioPath = path.join(os.tmpdir(), `cf-${jobId}-voice.wav`);
-	await writeFile(audioPath, buf);
-	return { audioPath };
+	await writeFile(target, buf);
+	return { audioPath: target, bytes: buf.byteLength };
 }
 
 async function safeText(res: Response): Promise<string> {
@@ -72,4 +84,15 @@ async function safeText(res: Response): Promise<string> {
 	} catch {
 		return "";
 	}
+}
+
+// Voice library mapping by tone — pick a voice that fits the brand vibe.
+// Currently we only have one voice id verified; expand when more are tested.
+export function pickVoiceForTone(_tone: {
+	formalCasual: number;
+	seriousPlayful: number;
+	directStorytelling: number;
+}): string {
+	// TODO: map to multiple Gradium voice ids once verified live.
+	return DEFAULT_VOICE_ID;
 }
