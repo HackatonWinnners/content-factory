@@ -180,11 +180,11 @@ Dependencies (no new top-level deps):
 - Create: `apps/web/src/app/result/_components/video-card.tsx`
 - Create: `apps/web/src/app/result/_components/voiceover-button.tsx`
 
-- [ ] Read `docs/design/hack/project/Result.html` and `result.jsx` top-to-bottom.
-- [ ] Server `page.tsx` reads `?jobId=`. `VideoCard` (`"use client"`) fetches `GET /api/v1/video-jobs/:id` once on mount. If `status !== "done"` shows muted state ("Still rendering — go back to /thinking"); otherwise renders `<video controls src={\`${NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${id}/video\`}/>` at `aspect-[9/16] w-[360px]` plus metadata column (brand name from `loadBrandProfile`, repo `owner/name` from job, generated-at).
-- [ ] `VoiceoverButton` (`"use client"`): primary `Generate voiceover` button. On click POST `/api/v1/video-jobs/${id}/voiceover` → set local `audioUrl`. While pending: disabled + spinner + "Synthesizing with Gradium…". On success: render `<audio controls src={audioUrl} autoPlay />`. On error: inline `Voiceover failed — retry` (re-enables). No SpeechSynthesis fallback — partner-tech demo, button labelled "Powered by Gradium".
-- [ ] Other buttons: `Download video` (anchor `download` attr → `/video`), `Download voiceover` (visible after audio generated), `Generate another` → `/source`.
-- [ ] Playwright self-test: with completed job from Task 9, navigate `/result?jobId=<id>`, assert `<video>` element with non-empty `currentSrc`. Click `Generate voiceover`, `browser_wait_for` "Powered by Gradium" or `<audio>` with non-empty `currentSrc`. Screenshot `.screenshots/06-result.png`. Assert `browser_console_messages` zero errors. `pnpm lint && pnpm check-types && pnpm -F web build` green.
+- [x] Read `docs/design/hack/project/Result.html` and `result.jsx` top-to-bottom.
+- [x] Server `page.tsx` reads `?jobId=`. `VideoCard` (`"use client"`) fetches `GET /api/v1/video-jobs/:id` once on mount. If `status !== "done"` shows muted state ("Still rendering — go back to /thinking"); otherwise renders `<video controls src={\`${NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${id}/video\`}/>` at `aspect-[9/16] w-[360px]` plus metadata column (brand name from `loadBrandProfile`, repo `owner/name` from job, generated-at).
+- [x] `VoiceoverButton` (`"use client"`): primary `Generate voiceover` button. On click POST `/api/v1/video-jobs/${id}/voiceover` → set local `audioUrl`. While pending: disabled + spinner + "Synthesizing with Gradium…". On success: render `<audio controls src={audioUrl} autoPlay />`. On error: inline `Voiceover failed — retry` (re-enables). No SpeechSynthesis fallback — partner-tech demo, button labelled "Powered by Gradium".
+- [x] Other buttons: `Download video` (anchor `download` attr → `/video`), `Download voiceover` (visible after audio generated), `Generate another` → `/source`.
+- [x] Playwright self-test (static UI verified — fake jobId shows 404 fallback, missing jobId redirects to /source, no React errors, screenshot `.screenshots/06-result.png` saved; live happy path with a completed job covered by Task 11 e2e). `pnpm lint && pnpm check-types && pnpm -F web build` green.
 
 ### Task 11: End-to-end smoke + screenshots
 
