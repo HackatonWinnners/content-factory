@@ -18,7 +18,7 @@ import { createJob, getJob, type Job, subscribe, updateJob } from "../lib/jobs";
 
 const CreateJobSchema = z.object({
 	kind: z.enum(["git", "linear", "pdf"]),
-	ref: z.string().min(1),
+	ref: z.string().min(1).max(500),
 	brand: BrandProfileSchema,
 });
 

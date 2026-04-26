@@ -41,15 +41,15 @@ export const BrandToneSchema = z.object({
 });
 
 export const BrandProfileSchema = z.object({
-	name: z.string().min(1),
-	description: z.string().optional(),
-	voice: z.string().min(1),
+	name: z.string().min(1).max(120),
+	description: z.string().max(2000).optional(),
+	voice: z.string().min(1).max(2000),
 	tone: BrandToneSchema,
-	examples: z.array(z.string()).optional(),
+	examples: z.array(z.string().max(500)).max(20).optional(),
 	rules: z
 		.object({
-			dos: z.array(z.string()),
-			donts: z.array(z.string()),
+			dos: z.array(z.string().max(200)).max(20),
+			donts: z.array(z.string().max(200)).max(20),
 		})
 		.optional(),
 });
