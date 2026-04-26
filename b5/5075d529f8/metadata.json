@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "b55075d529f8",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/server/src/index.ts",
+    "apps/server/src/routes/repos.ts",
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/web/src/app/source/_components/commit-list.tsx",
+    "apps/web/src/app/source/_components/metadata-card.tsx",
+    "apps/web/src/app/source/_components/source-form.tsx",
+    "apps/web/src/app/source/_components/source-icons.tsx",
+    "apps/web/src/app/source/_components/source-right-panel.tsx",
+    "apps/web/src/app/source/_components/source-screen.tsx",
+    "apps/web/src/app/source/_components/source-sidebar.tsx",
+    "apps/web/src/app/source/_components/tabs-and-url.tsx",
+    "apps/web/src/app/source/_components/use-repo-preview.ts",
+    "apps/web/src/app/source/page.tsx",
+    "apps/web/src/lib/recent-projects.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b5/5075d529f8/0/metadata.json",
+      "transcript": "/b5/5075d529f8/0/full.jsonl",
+      "content_hash": "/b5/5075d529f8/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 0,
+    "api_call_count": 0
+  }
+}
