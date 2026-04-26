@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "6ef8a3fb865a",
+  "strategy": "manual-commit",
+  "branch": "hackathon-mvp",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/web/src/app/result/_components/video-card.tsx",
+    "apps/web/src/app/source/_components/source-form.tsx",
+    "apps/web/src/lib/brand-profile.ts",
+    "packages/agent/src/github.ts",
+    "packages/agent/src/tavily.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/6e/f8a3fb865a/0/metadata.json",
+      "transcript": "/6e/f8a3fb865a/0/full.jsonl",
+      "content_hash": "/6e/f8a3fb865a/0/content_hash.txt",
+      "prompt": "/6e/f8a3fb865a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 23,
+    "cache_creation_tokens": 87297,
+    "cache_read_tokens": 1533286,
+    "output_tokens": 12309,
+    "api_call_count": 18
+  }
+}
