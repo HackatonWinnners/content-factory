@@ -32,12 +32,14 @@ This repo was scaffolded by Better-T-Stack. Respect the existing structure.
   shadcn/ui via `@content-factory/ui` package.
 - Backend (`apps/server`): **Hono 4** on `@hono/node-server` (port 3000).
   Build via **tsdown**, dev via `tsx watch`. No Express, no NestJS.
-- LLM: **AI SDK v6** with `@ai-sdk/google` (model: `gemini-2.5-flash`).
+- LLM: **AI SDK v6** with `@ai-sdk/google` (model: `gemini-2.5-pro`).
   - Script writer (`packages/agent/src/script.ts`): `generateObject` with
-    `VideoScriptSchema` for structured editorial output.
+    `VideoScriptSchema` (typed scenes — `stat`/`fact`/`feature`/`comparison`/`quote`).
+    Schema bounds are generous (text 240, voiceover 800, etc) — Gemini was
+    overflowing tighter limits when fed Peec context.
   - Legacy chat demo (`apps/server/src/routes/ai.ts`): `streamText` for the
     `/ai` page playground (devtools middleware gated to `NODE_ENV=development`).
-  Talk to Tavily/Hera/Gradium/Pioneer over their REST APIs.
+  Talk to Tavily / Peec / Gradium over their REST APIs.
 - Validation: **Zod 4** at all external boundaries (HTTP req/resp, env, external APIs).
 - DB: **Postgres 16** via `packages/db` docker-compose. ORM: **Drizzle**.
   Connection: `postgresql://postgres:password@localhost:5432/content-factory`.
@@ -59,36 +61,43 @@ Each third-party service has a single canonical way to talk to it from this
 codebase. Do not invent a different transport; do not bolt on an MCP server
 when the table says "REST".
 
-| Service       | Transport in our code              | Notes                                                                |
-| ------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| Google Gemini | AI SDK (`@ai-sdk/google`)          | Streaming via `streamText`. Already wired in server.                 |
-| Tavily        | REST via `fetch` (no extra dep)    | Official `tavily-mcp` exists but only for agent tooling, not runtime |
-| Hera          | REST via `fetch`                   | No SDK, no MCP. `x-api-key` header. See docs.hera.video               |
-| Gradium       | REST via `fetch`                   | TTS endpoint: `POST https://api.gradium.ai/api/post/speech/tts` with `x-api-key` header. `output_format: "wav"`, `only_audio: true`. See `apps/server/src/lib/gradium.ts`. |
-| Pioneer       | REST via `fetch` (Fastino API)     | No SDK, no MCP. Use `PIONEER_API_KEY`                                |
-| Entire        | CLI hooks (already installed)      | Captures sessions per commit. No SDK, no MCP                         |
-| Aikido        | Final scan via web UI before submit| `@aikidosec/mcp` exists for dev tooling but not used at runtime      |
-| Lovable       | n/a                                | Lovable was for prototyping the Better-T scaffold; not a runtime dep |
+| Service       | Transport in our code                       | Notes                                                                                                                                                                                                                                                                                       |
+| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google Gemini | AI SDK (`@ai-sdk/google`), `gemini-2.5-pro` | `generateObject` for the script. Streaming `streamText` only used by the legacy `/ai` playground.                                                                                                                                                                                            |
+| Tavily        | REST via `fetch` (no extra dep)             | Official `tavily-mcp` exists but only for agent tooling, not runtime.                                                                                                                                                                                                                       |
+| Peec AI       | REST via `fetch` + project-level MCP        | Runtime: `packages/agent/src/peec.ts` calls `https://api.peec.ai/customer/v1/{projects,brands,reports/brands,reports/domains}` with `x-api-key` header. MCP at `https://api.peec.ai/mcp` registered in `.mcp.json` for dev workflows; OAuth-based, can't run headless from the server. |
+| Gradium       | REST via `fetch`                            | TTS endpoint: `POST https://api.gradium.ai/api/post/speech/tts` with `x-api-key`. `output_format: "wav"`, `only_audio: true`. Per-scene synthesis throttled to concurrency 2 (Gradium caps at 3 active sessions). Streamed WAVs have `dataSize=0xFFFFFFFF` — duration computed from file length. |
+| Entire        | CLI hooks (already installed)               | Captures sessions per commit. No SDK, no MCP.                                                                                                                                                                                                                                              |
+| Aikido        | Final scan via web UI before submit         | `@aikidosec/mcp` exists for dev tooling but not used at runtime.                                                                                                                                                                                                                            |
+| Hera          | n/a                                          | Declared in env but **not used** in pipeline. Track was changed to Peec AI.                                                                                                                                                                                                                |
+| Pioneer       | n/a                                          | Declared in env but **not used** in pipeline. Heuristic commit classification handles user-facing detection in `apps/server/src/routes/repos.ts`.                                                                                                                                          |
+| Lovable       | n/a                                          | Used for the initial Better-T scaffold; not a runtime dep.                                                                                                                                                                                                                                  |
 
 ## Workspace layout
 
 ```
 apps/
-  web/        Next.js 16 (port 3001)
-  server/    Hono (port 3000)
+  web/        Next.js 16 (port 3001) — landing + /brand-setup + /source +
+              /thinking + /result + /ai (legacy chat)
+  server/    Hono (port 3000) — /api/v1/{health,ai,repos,video-jobs}
 packages/
   config/     Shared tsconfig.base.json
   env/        T3 env loaders (server.ts, web.ts)
-  db/         Drizzle schema + migrations + docker-compose.yml
+  db/         Drizzle schema + docker-compose (unused in current pipeline)
   ui/         shadcn/ui components shared between web and server
   composer/   Remotion project — compositions + programmatic render API
-  agent/      Editorial pipeline: parseRepoUrl + fetchRepoSnapshot (GitHub REST),
-              fetchMarketContext (Tavily), writeScriptFromRepo (Gemini via AI SDK
-              generateObject). Exports VideoScriptSchema, BrandProfileSchema,
-              RepoSnapshotSchema, MarketContextSchema.
+              + music-library/ (royalty-free tracks copied into bundle on demand)
+  agent/      Editorial pipeline:
+                github.ts   parseRepoUrl + fetchRepoSnapshot (GitHub REST)
+                tavily.ts   fetchMarketContext
+                peec.ts     fetchPeecContext (Peec AI Customer API)
+                script.ts   writeScriptFromRepo (Gemini generateObject)
+              Exports VideoScriptSchema, BrandProfileSchema, RepoSnapshotSchema,
+              MarketContextSchema, PeecContextSchema.
 docs/
-  plans/      Ralph plan files (active)
-  plans/completed/ — finished plans
+  plans/              Ralph plan files (active)
+  plans/completed/    finished plans
+  design/hack/        Handoff bundle from claude.ai/design (5 screens)
 ```
 
 ## Hard rules — never break these

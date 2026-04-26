@@ -40,7 +40,10 @@ const sceneSchema = z.object({
 		.optional(),
 	bullets: z.array(z.string().min(1).max(160)).max(6).optional(),
 	comparison: z
-		.object({ them: z.string().min(1).max(200), us: z.string().min(1).max(200) })
+		.object({
+			them: z.string().min(1).max(200),
+			us: z.string().min(1).max(200),
+		})
 		.optional(),
 });
 
