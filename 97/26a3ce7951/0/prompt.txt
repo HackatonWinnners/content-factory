@@ -1,0 +1,10 @@
+continue deploy
+
+---
+
+задеплой новую хуйню, мы там добавили приколов, и в енв вроде чета новое
+
+---
+
+Generation failed
+ENOENT: no such file or directory, open '/repo/apps/server/dist/index.ts'
