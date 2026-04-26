@@ -1,0 +1,130 @@
+Second code review pass of: implementation of plan at /Users/madvil2/Projects/content-factory/docs/plans/completed/2026-04-26-hackathon-mvp.md
+
+Progress log: /Users/madvil2/Projects/content-factory/.ralphex/progress/progress-2026-04-26-hackathon-mvp.txt (contains task execution and previous review iterations)
+
+## Step 1: Get Branch Context
+
+Run both commands to understand what was done:
+- `git log main..HEAD --oneline` - see commit history (what was implemented)
+- `git diff main...HEAD` - see actual code changes
+
+## Step 2: Launch Review Agents IN PARALLEL
+
+All Task tool calls MUST be in the same message for parallel foreground execution.
+Do NOT use run_in_background. Foreground agents run in parallel and block until all complete — no TaskOutput polling needed.
+
+CRITICAL: Do NOT proceed to Step 3 until BOTH agents have returned results.
+
+Agents to launch:
+Use the Task tool to launch a general-purpose agent with this prompt:
+"Review code for bugs, security issues, and quality problems.
+
+## Correctness Review
+
+1. Logic errors - off-by-one errors, incorrect conditionals, wrong operators
+2. Edge cases - empty inputs, nil/null values, boundary conditions, concurrent access
+3. Error handling - all errors checked, appropriate error wrapping, no silent failures
+4. Resource management - proper cleanup, no leaks, correct resource release
+5. Concurrency issues - race conditions, deadlocks, thread/coroutine leaks
+6. Data integrity - validation, sanitization, consistent state management
+
+## Security Analysis
+
+1. Input validation - all user inputs validated and sanitized
+2. Authentication/authorization - proper checks in place
+3. Injection vulnerabilities - SQL, command, path traversal
+4. Secret exposure - no hardcoded credentials or keys
+5. Information disclosure - error messages, logs, debug info
+
+## Simplicity Assessment
+
+1. Direct solutions first - if simple approach works, don't use complex pattern
+2. No enterprise patterns for simple problems - avoid factories, builders for straightforward code
+3. Question every abstraction - each interface/abstraction must solve real problem
+4. No scope creep - changes solve only the stated problem
+5. No premature optimization - unless addressing proven bottlenecks
+
+## What to Report
+
+For each issue:
+- Location: exact file path and line number
+- Issue: clear description
+- Impact: how this affects the code
+- Fix: specific suggestion
+
+Focus on defects that would cause runtime failures, security vulnerabilities, or maintainability problems.
+Report problems only - no positive observations."
+
+Report findings only - no positive observations.
+Use the Task tool to launch a general-purpose agent with this prompt:
+"Review whether the implementation achieves the stated goal/requirement.
+
+## Core Review Responsibilities
+
+1. Requirement coverage - does implementation address all aspects of the stated requirement? Are there edge cases or scenarios not handled?
+
+2. Correctness of approach - is the chosen approach actually solving the right problem? Could it fail to achieve the goal in certain conditions?
+
+3. Wiring and integration - is everything connected properly? Are new components registered, routes added, handlers wired, configs updated?
+
+4. Completeness - are there missing pieces that would prevent the feature from working? Missing imports, unimplemented interfaces, incomplete migrations?
+
+5. Logic flow - does data flow correctly from input to output? Are transformations correct? Is state managed properly?
+
+6. Edge cases - are boundary conditions handled? Empty inputs, null values, concurrent access, error paths?
+
+## What to Report
+
+For each issue found:
+- Issue: clear description of what's wrong
+- Impact: how this prevents achieving the goal
+- Location: file and line reference
+- Fix: what needs to be added or changed
+
+Focus on correctness of approach, not code style.
+Report problems only - no positive observations."
+
+Report findings only - no positive observations.
+
+Each agent prompt should be short — do NOT paste the diff into it. Instead, instruct each agent to:
+1. Run `git diff main...HEAD` and `git diff --stat main...HEAD` to get the changes
+2. Read the actual source files to review code in full context
+3. Report problems only - no positive observations
+
+Focus only on critical and major issues. Ignore style/minor issues.
+
+## Step 3: Verify and Evaluate Findings
+
+### 3.1 Verify Each Finding
+For each issue reported:
+1. Read actual code at file:line
+2. Verify issue is real (not false positive)
+3. Check if it's truly critical/major severity
+
+### 3.2 Act on Verified Findings
+
+IMPORTANT: Pre-existing issues (linter errors, failed tests) should also be fixed.
+Do NOT reject issues just because they existed before this branch - fix them anyway.
+
+SIGNAL LOGIC - READ CAREFULLY:
+
+IMPORTANT: Do not decide on a signal path until you have completed Steps 1-3 in full — all agents finished, all results collected, all findings verified and acted on.
+
+REVIEW_DONE means "this iteration found ZERO issues" - NOT "I finished fixing issues".
+
+Path A - NO issues found in this iteration:
+- You reviewed the code and found nothing critical/major to fix
+- Output: <<<RALPHEX:REVIEW_DONE>>>
+
+Path B - Issues found AND fixed:
+1. Fix verified critical/major issues only
+2. Run tests and linter - ALL tests must pass, ALL linter issues resolved
+3. Commit fixes: `git commit -m "fix: address code review findings"`
+4. STOP HERE. Do NOT output any signal. Do NOT output REVIEW_DONE.
+   The external loop will run another review iteration to verify your fixes.
+   Your fixes might have introduced new issues - another iteration must check.
+
+Path C - Issues found but cannot fix:
+- Output: <<<RALPHEX:TASK_FAILED>>>
+
+OUTPUT FORMAT: No markdown formatting (no **bold**, `code`, # headers). Plain text and - lists are fine.
