@@ -161,10 +161,18 @@ videoJobRoutes.get("/:id/video", (c) => {
 
 const inflightVoiceover = new Map<string, Promise<string>>();
 
+// Gradium TTS rejects payloads beyond a few thousand chars. Cap defensively.
+const NARRATION_MAX_CHARS = 4_000;
+
 videoJobRoutes.post("/:id/voiceover", async (c) => {
 	const id = c.req.param("id");
 	const job = getJob(id);
 	if (!job) return c.json({ error: "not found" }, 404);
+
+	if (job.audioPath && existsSync(job.audioPath)) {
+		return c.json({ audioUrl: `/api/v1/video-jobs/${id}/audio` });
+	}
+
 	if (!job.script) {
 		return c.json({ error: "script not ready" }, 404);
 	}
@@ -173,7 +181,9 @@ videoJobRoutes.post("/:id/voiceover", async (c) => {
 		job.script.hook,
 		...job.script.scenes.map((s) => s.text),
 		job.script.closingCta,
-	].join(" ");
+	]
+		.join(" ")
+		.slice(0, NARRATION_MAX_CHARS);
 
 	let pending = inflightVoiceover.get(id);
 	if (!pending) {
