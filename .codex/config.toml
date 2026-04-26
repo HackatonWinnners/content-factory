@@ -8,3 +8,11 @@ args = ["-y", "@upstash/context7-mcp"]
 [mcp_servers.shadcn]
 command = "npx"
 args = ["-y", "shadcn@latest", "mcp"]
+
+# Peec AI MCP — distribution-gap intelligence. Streamable HTTP, OAuth on first
+# use. Production pipeline uses Peec REST (x-api-key) for headless calls;
+# this MCP entry is for dev/Claude Code workflows when researching how the
+# brand stacks up across AI engines.
+[mcp_servers.peec-ai]
+type = "http"
+url = "https://api.peec.ai/mcp"

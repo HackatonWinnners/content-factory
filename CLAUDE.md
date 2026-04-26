@@ -199,6 +199,11 @@ proactively — they exist to save you time and reduce hallucination.
 - **shadcn** (`mcp__shadcn__*`) — add, search, audit shadcn components.
   Use `search_items_in_registries` before guessing prop names.
   Use `get_add_command_for_items` instead of recalling the install CLI from memory.
+- **peec-ai** (`mcp__peec_ai__*`) — distribution-gap intelligence: brand
+  visibility / share-of-voice / competitor breakdown across AI engines.
+  Streamable HTTP, OAuth on first invocation. Use during dev to explore the
+  data; production pipeline uses Peec REST API directly with `x-api-key` from
+  `packages/agent/src/peec.ts`.
 - **Linear / Notion / Drive / Amplitude** — only if a task explicitly references them.
 
 ## UI verification workflow with Playwright
