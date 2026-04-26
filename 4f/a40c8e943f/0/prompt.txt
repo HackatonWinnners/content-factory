@@ -1,0 +1,69 @@
+делай а и б, пик ии вот тока что добавилось 
+Что сделано
+
+  packages/agent/src/peec.ts
+
+  REST-клиент к Peec AI Customer API (https://api.peec.ai/customer/v1 с x-api-key хедером). Не OAuth — нашёл что у них есть REST с
+   API-key auth поверх MCP, проще для server-to-server.
+
+  fetchPeecContext({ brandName, projectId? }) делает 3 параллельных запроса:
+  1. GET /brands — найти own brand + competitors
+  2. POST /reports/brands — visibility / share-of-voice / sentiment / mention count за 30 дней
+  3. POST /reports/domains — domains которые часто вытаскиваются AI-моделями но цитируют наш бренд <20% раз = opportunity gaps
+
+  Возвращает PeecContext с available: false если PEEC_API_KEY не задан или нет matching project (graceful degradation, никогда не
+  падает pipeline).
+
+  script.ts — Gemini prompt усилен
+
+  Когда peec.available === true, в user prompt добавляется секция:
+
+  ## Peec AI — distribution-gap intelligence
+  Across AI search engines (ChatGPT, Perplexity, etc) over the last 30 days,
+  here is how {brand} stacks up against tracked competitors:
+  - Brand (you): visibility 12%, share-of-voice 8%, 234 mentions
+  - Competitor1: visibility 47%, share-of-voice 34%
+  - Competitor2: visibility 38%, share-of-voice 22%
+  ...
+
+  Distribution opportunity — these domains retrieve a lot of brand-relevant
+  traffic but cite {brand} less than 20% of the time:
+  - techcrunch.com
+  - theverge.com
+  - ...
+
+  This is the key signal: write a script that closes the visibility/share-of-voice
+  gap. Where the brand is INVISIBLE relative to competitors, that's the angle.
+  Lead with the unfair advantage that competitors can't claim, and frame the
+  closing CTA so a viewer who sees this on TikTok / Reels / YouTube Shorts
+  immediately remembers the brand the next time they ask an AI assistant about
+  this category.
+
+  runPipeline() обновлён
+
+  Tavily + Peec теперь дёргаются в Promise.all параллельно во время researching фазы. Один лог-line [pipeline X] peec: BrandName
+  vs N competitors, M opportunity domains если данные подъехали.
+
+  Env
+
+  - PEEC_API_KEY= добавлен в .env.example с пометкой "degrades gracefully if missing"
+  - В packages/env/src/server.ts объявлен как optional — если ключа нет, pipeline работает без Peec данных
+
+  Для submit'а
+
+  Добавь в .env:
+  PEEC_API_KEY=твой_ключ_от_https://app.peec.ai/api-keys
+
+  Если ключ scoped к hackathon test проекту (Nothing/Attio/BYD), brand name в /brand-setup должен примерно совпадать с именем
+  бренда в этом проекте — клиент matches case-insensitive includes. Иначе берёт первый brand из списка.
+
+  Ответы для submission form
+
+  ▎ Partner technologies used: Deepmind, Gradium, Tavily
+  ▎ Track: Peec AI - 0→1 AI Marketer
+  ▎ Side challenges: Entire, Gradium, Aikido
+
+  Сейчас закоммичено ab9c130 feat(peec): integrate Peec AI REST... на origin/main.
+
+  Если получишь Peec API key — могу прогнать live тест и убедиться что распарсивается правильно. Если эндпоинты вернут структуру
+  отличную от моих типов — поправим за 5 минут.
