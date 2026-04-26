@@ -9,7 +9,7 @@ import { z } from "zod";
 import { type BrandProfile, loadBrandProfile } from "@/lib/brand-profile";
 
 const githubUrlPattern =
-	/^(?:https?:\/\/github\.com\/[^/]+\/[^/]+\/?|gh:[^/]+\/[^/]+)$/;
+	/^https?:\/\/(?:www\.)?github\.com\/[^/\s?#]+\/[^/\s?#]+\/?(?:[?#].*)?$/i;
 
 const githubRefSchema = z
 	.string()

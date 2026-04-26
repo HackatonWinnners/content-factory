@@ -52,7 +52,12 @@ videoJobRoutes.post("/", async (c) => {
 videoJobRoutes.get("/:id", (c) => {
 	const job = getJob(c.req.param("id"));
 	if (!job) return c.json({ error: "not found" }, 404);
-	return c.json(job);
+	const { videoPath, audioPath, ...publicJob } = job;
+	return c.json({
+		...publicJob,
+		hasVideo: Boolean(videoPath),
+		hasAudio: Boolean(audioPath),
+	});
 });
 
 videoJobRoutes.get("/:id/events", (c) => {
@@ -63,11 +68,20 @@ videoJobRoutes.get("/:id/events", (c) => {
 	return streamSSE(c, async (stream) => {
 		let closed = false;
 
+		const toPublic = (job: Job) => {
+			const { videoPath, audioPath, ...rest } = job;
+			return {
+				...rest,
+				hasVideo: Boolean(videoPath),
+				hasAudio: Boolean(audioPath),
+			};
+		};
+
 		const send = async (job: Job) => {
 			if (closed) return;
 			await stream.writeSSE({
 				event: "status",
-				data: JSON.stringify(job),
+				data: JSON.stringify(toPublic(job)),
 			});
 		};
 
@@ -87,6 +101,17 @@ videoJobRoutes.get("/:id/events", (c) => {
 					}
 				});
 			});
+
+			// Re-check status after subscribing in case the job transitioned
+			// between the initial snapshot and listener registration.
+			const post = getJob(id);
+			if (post && (post.status === "done" || post.status === "failed")) {
+				void send(post).then(() => {
+					unsubscribe();
+					closed = true;
+					resolve();
+				});
+			}
 
 			stream.onAbort(() => {
 				unsubscribe();

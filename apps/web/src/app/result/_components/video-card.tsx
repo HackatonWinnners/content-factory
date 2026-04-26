@@ -98,7 +98,9 @@ export function VideoCard({ jobId }: { jobId: string }) {
 
 	useEffect(() => {
 		let cancelled = false;
-		(async () => {
+		let timer: ReturnType<typeof setTimeout> | null = null;
+
+		const tick = async () => {
 			try {
 				const response = await fetch(
 					`${env.NEXT_PUBLIC_SERVER_URL}/api/v1/video-jobs/${jobId}`,
@@ -107,15 +109,21 @@ export function VideoCard({ jobId }: { jobId: string }) {
 					throw new Error(`Server returned ${response.status}`);
 				}
 				const data = (await response.json()) as Job;
-				if (!cancelled) setJob(data);
-			} catch (e) {
-				if (!cancelled) {
-					setLoadError(e instanceof Error ? e.message : "Failed to load job");
+				if (cancelled) return;
+				setJob(data);
+				if (data.status !== "done" && data.status !== "failed") {
+					timer = setTimeout(tick, 2000);
 				}
+			} catch (e) {
+				if (cancelled) return;
+				setLoadError(e instanceof Error ? e.message : "Failed to load job");
 			}
-		})();
+		};
+
+		void tick();
 		return () => {
 			cancelled = true;
+			if (timer) clearTimeout(timer);
 		};
 	}, [jobId]);
 

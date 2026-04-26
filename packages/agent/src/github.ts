@@ -7,7 +7,9 @@ const README_MAX = 12_000;
 export type ParsedRepo = { owner: string; name: string };
 
 // GitHub-permitted segment chars: alphanumerics, dot, dash, underscore.
-const SEGMENT = /^[A-Za-z0-9._-]+$/;
+// Must contain at least one alphanumeric to reject pure-dot segments like "."
+// or ".." which GitHub's REST collapses into a different endpoint.
+const SEGMENT = /^[A-Za-z0-9._-]*[A-Za-z0-9_-][A-Za-z0-9._-]*$/;
 
 export function parseRepoUrl(input: string): ParsedRepo {
 	const trimmed = input.trim();

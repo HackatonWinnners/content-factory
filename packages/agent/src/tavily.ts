@@ -3,6 +3,8 @@ import { type MarketContext, MarketContextSchema } from "./schemas";
 
 const TAVILY_URL = "https://api.tavily.com/search";
 const TIMEOUT_MS = 6_000;
+// Tavily caps `query` around 400 chars; trim to stay safely under.
+const QUERY_MAX = 380;
 
 type TavilyResult = {
 	title?: string;
@@ -18,6 +20,7 @@ export async function fetchMarketContext({
 }: {
 	topic: string;
 }): Promise<MarketContext> {
+	const query = topic.slice(0, QUERY_MAX);
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 	try {
@@ -26,7 +29,7 @@ export async function fetchMarketContext({
 			headers: { "content-type": "application/json" },
 			body: JSON.stringify({
 				api_key: env.TAVILY_API_KEY,
-				query: topic,
+				query,
 				max_results: 5,
 				search_depth: "basic",
 				include_answer: false,

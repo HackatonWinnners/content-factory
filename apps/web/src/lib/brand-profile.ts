@@ -3,9 +3,9 @@ import { z } from "zod";
 const BRAND_PROFILE_KEY = "cf:brandProfile";
 
 export const BrandProfileSchema = z.object({
-	name: z.string(),
+	name: z.string().min(1),
 	description: z.string().optional(),
-	voice: z.string(),
+	voice: z.string().min(1),
 	tone: z.object({
 		formalCasual: z.number(),
 		seriousPlayful: z.number(),
