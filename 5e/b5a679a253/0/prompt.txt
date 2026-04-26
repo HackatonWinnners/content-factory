@@ -1,0 +1,58 @@
+External code review evaluation.
+
+Codex reviewed the code and found:
+
+---
+- High: [packages/agent/src/script.ts:52](/Users/madvil2/Projects/content-factory/packages/agent/src/script.ts:52) makes the Gemini `generateObject()` call with no timeout/abort path, while [apps/server/src/routes/video-jobs.ts:218](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:218) moves the job into `"scripting"` immediately before awaiting it. GitHub/Tavily/Gradium all have timeouts, but Gemini does not, so a stalled model request leaves the job stuck forever instead of transitioning to `failed`.
+
+- Medium: [apps/server/src/routes/video-jobs.ts:19](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:19) only validates `ref` as a non-empty string, then [apps/server/src/routes/video-jobs.ts:49](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:49) returns `{ jobId }` before the repo URL is parsed at [apps/server/src/routes/video-jobs.ts:201](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:201). A malformed repo ref therefore gets a success response and sends the UI to `/thinking`, only to fail asynchronously moments later. This should be a synchronous `400` at the request boundary.
+
+- Medium: [packages/agent/src/script.ts:24](/Users/madvil2/Projects/content-factory/packages/agent/src/script.ts:24) and [packages/agent/src/script.ts:64](/Users/madvil2/Projects/content-factory/packages/agent/src/script.ts:64) enforce the 30–60s limit using only scene durations, but [packages/composer/src/compositions/script-video.tsx:9](/Users/madvil2/Projects/content-factory/packages/composer/src/compositions/script-video.tsx:9), [packages/composer/src/compositions/script-video.tsx:10](/Users/madvil2/Projects/content-factory/packages/composer/src/compositions/script-video.tsx:10), and [packages/composer/src/compositions/script-video.tsx:394](/Users/madvil2/Projects/content-factory/packages/composer/src/compositions/script-video.tsx:394) always add a 2.5s hook plus 2s closing. A “60s” script can therefore render as 64.5s, violating the advertised 30–60s output contract.
+
+- Medium: [apps/server/src/lib/jobs.ts:19](/Users/madvil2/Projects/content-factory/apps/server/src/lib/jobs.ts:19) stores the full generated `script` on the job, and the public serializers at [apps/server/src/routes/video-jobs.ts:55](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:55) and [apps/server/src/routes/video-jobs.ts:71](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:71) strip only file paths. After [apps/server/src/routes/video-jobs.ts:220](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:220), every render progress tick from [apps/server/src/routes/video-jobs.ts:233](/Users/madvil2/Projects/content-factory/apps/server/src/routes/video-jobs.ts:233) resends that full script over SSE even though the thinking UI never uses it. That is unnecessary data exposure and avoidable network bloat.
+
+- Medium: [apps/web/src/app/brand-setup/_components/brand-form.tsx:136](/Users/madvil2/Projects/content-factory/apps/web/src/app/brand-setup/_components/brand-form.tsx:136), [apps/web/src/app/brand-setup/_components/brand-form.tsx:155](/Users/madvil2/Projects/content-factory/apps/web/src/app/brand-setup/_components/brand-form.tsx:155), and [apps/web/src/app/brand-setup/_components/brand-form.tsx:201](/Users/madvil2/Projects/content-factory/apps/web/src/app/brand-setup/_components/brand-form.tsx:201) do not enforce the schema max lengths from [apps/web/src/lib/brand-profile.ts:5](/Users/madvil2/Projects/content-factory/apps/web/src/lib/brand-profile.ts:5), and `handleSave()` calls [apps/web/src/lib/brand-profile.ts:50](/Users/madvil2/Projects/content-factory/apps/web/src/lib/brand-profile.ts:50) without catching parse errors. Pasting a >120-char brand name or >2000-char voice causes a thrown `ZodError` and the save appears to do nothing, with no feedback to the user.
+
+---
+
+## Your Task
+
+Analyze each finding critically. For EACH issue:
+
+1. Read the code at the reported location and trace the flow - find callers, see what functions it calls, understand the full context
+2. Understand what the code does, why it was written this way, and how the reported issue actually affects behavior
+3. Check /Users/madvil2/Projects/content-factory/docs/plans/completed/2026-04-26-hackathon-mvp.md - was this an intentional design decision?
+4. Assess the actual impact - is this a real problem or a style preference?
+
+Then categorize:
+
+- **Valid issues**: Fix them (edit files, run tests/linter to verify)
+- **Invalid/irrelevant issues**: Explain why they don't apply (intentional design, already mitigated, misunderstood context) - your explanation will be passed to Codex for re-evaluation
+
+IMPORTANT: Pre-existing issues (linter errors, failed tests) should also be fixed.
+Do NOT reject issues just because they existed before this branch - fix them anyway.
+
+## After Evaluation
+
+**If there were actionable issues to fix:**
+- Fix them, run tests/linter to verify - ALL tests must pass, ALL linter issues resolved
+- Do NOT commit yet - more codex iterations may follow
+- STOP here and DO NOT output any signal - the external loop will run codex again to verify fixes
+- NEVER output CODEX_REVIEW_DONE after fixing issues
+
+**If you dismissed ALL findings as invalid** (codex reported issues but none are actionable):
+- Explain why each finding is invalid
+- Do NOT commit anything
+- Do NOT output any signal
+- STOP here — the loop will re-run the external tool with your explanations for context
+
+**If Codex reports NO actionable issues** (empty output, "no issues found", "NO ISSUES FOUND"):
+- Run `git diff` to review ALL uncommitted changes (accumulated fixes from multiple iterations)
+- Commit all fixes with message: "fix: address codex review findings"
+- Output exactly: <<<RALPHEX:CODEX_REVIEW_DONE>>>
+
+CRITICAL: The CODEX_REVIEW_DONE signal means "codex found nothing to fix". Only output it when codex itself reported no issues. If you fixed anything, do NOT output the signal.
+
+CRITICAL: Never run codex commands yourself. The external loop handles codex execution.
+
+OUTPUT FORMAT: No markdown formatting (no **bold**, `code`, # headers). Plain text and - lists are fine.
