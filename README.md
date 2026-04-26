@@ -26,6 +26,7 @@ GitHub repo URL
 extract user-facing facts
    │
    ▼  search competitors / similar projects          (Tavily)
+   ▼  AI-search visibility + distribution gaps       (Peec AI)
 market context
    │
    ▼  write hook + scenes + closing CTA              (Gemini 2.5 Flash, AI SDK v6)
@@ -53,6 +54,7 @@ attached to each commit, not just the diff.
 | API          | Hono on `@hono/node-server`, Node 22+ (port 3000)           |
 | LLM          | Vercel AI SDK v6 + `@ai-sdk/google` (`gemini-2.5-flash`)    |
 | Search       | Tavily REST                                                 |
+| AI-search intel | Peec AI Customer API (visibility + distribution gaps)    |
 | Voice        | Gradium TTS REST                                            |
 | Composer     | Remotion 4 (`@content-factory/composer`)                    |
 | Validation   | Zod 4 at all external boundaries                            |
@@ -64,6 +66,7 @@ attached to each commit, not just the diff.
 
 - **Google Gemini** — script writing (`gemini-2.5-flash` via AI SDK v6 `generateObject`)
 - **Tavily** — market context search powering the editorial step
+- **Peec AI** — distribution-gap intel (own brand vs competitors across AI search engines: visibility, share-of-voice, opportunity domains). Fed into the Gemini prompt so the script closes the visibility gap. Track: **0→1 AI Marketer**.
 - **Gradium** — TTS voiceover triggered from the result screen
 - **Aikido** — security scan and report before submission (see below)
 - **Entire** — every commit's AI agent session captured by Entire; `entire log` shows the recorded reasoning
@@ -85,7 +88,13 @@ attached to each commit, not just the diff.
 GEMINI_API_KEY=...
 TAVILY_API_KEY=...
 GRADIUM_API_KEY=...
+PEEC_API_KEY=...   # optional — pipeline degrades gracefully without it
 ```
+
+Get a Peec key at <https://app.peec.ai/api-keys>. If the brand name in
+`/brand-setup` matches (case-insensitive substring) a brand tracked in your
+Peec project, its visibility / share-of-voice / opportunity-domain data is
+piped into the Gemini prompt. Otherwise the pipeline runs without Peec context.
 
 `HERA_API_KEY` and `PIONEER_API_KEY` can stay placeholder for the demo flow —
 they are scaffolded for future pipeline steps but the GitHub-only MVP doesn't
@@ -207,4 +216,4 @@ pnpm -F @content-factory/composer studio   # Remotion Studio for previewing
 
 ## License
 
-Hackathon-only. Not for redistribution.
+[MIT](./LICENSE).
