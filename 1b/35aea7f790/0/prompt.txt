@@ -1,0 +1,7 @@
+Open Source Repository
+
+- Provide a public GitHub repository containing your project's source code
+- Your repository must include:
+    - Comprehensive README with setup and installation instructions
+    - Clear documentation of all APIs, frameworks, and tools utilized
+    - Sufficient technical documentation to enable thorough jury evaluation

@@ -1,0 +1,63 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "1b35aea7f790",
+  "session_id": "edf254db-af5b-4035-8042-fde8e8112ffc",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T11:42:11.976132Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".env.example",
+    "apps/server/src/routes/video-jobs.ts",
+    "packages/agent/src/index.ts",
+    "packages/agent/src/schemas.ts",
+    "packages/agent/src/script.ts",
+    "packages/env/src/server.ts"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "42788573b038",
+  "token_usage": {
+    "input_tokens": 11,
+    "cache_creation_tokens": 52844,
+    "cache_read_tokens": 249612,
+    "output_tokens": 1928,
+    "api_call_count": 6
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T11:42:11.972998Z",
+    "agent_lines": 53,
+    "agent_removed": 6,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 4,
+    "total_committed": 53,
+    "total_lines_changed": 63,
+    "agent_percentage": 93.65079365079364,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 242,
+      "user_lines_removed": 4,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".env.example": 5,
+        "packages/agent/src/index.ts": 3,
+        "packages/agent/src/peec.ts": 195,
+        "packages/agent/src/schemas.ts": 27,
+        "packages/agent/src/script.ts": 11,
+        "packages/env/src/server.ts": 1
+      },
+      "user_removed_per_file": {
+        ".env.example": 2,
+        "packages/agent/src/script.ts": 2
+      }
+    }
+  ]
+}

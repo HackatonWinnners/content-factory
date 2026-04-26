@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "1b35aea7f790",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".env.example",
+    "apps/server/src/routes/video-jobs.ts",
+    "packages/agent/src/index.ts",
+    "packages/agent/src/schemas.ts",
+    "packages/agent/src/script.ts",
+    "packages/env/src/server.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1b/35aea7f790/0/metadata.json",
+      "transcript": "/1b/35aea7f790/0/full.jsonl",
+      "content_hash": "/1b/35aea7f790/0/content_hash.txt",
+      "prompt": "/1b/35aea7f790/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 11,
+    "cache_creation_tokens": 52844,
+    "cache_read_tokens": 249612,
+    "output_tokens": 1928,
+    "api_call_count": 6
+  }
+}
