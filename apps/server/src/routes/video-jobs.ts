@@ -154,7 +154,7 @@ videoJobRoutes.get("/:id/audio", (c) => {
 	const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
 	return new Response(webStream, {
 		headers: {
-			"content-type": "audio/mpeg",
+			"content-type": "audio/wav",
 			"content-length": String(size),
 		},
 	});

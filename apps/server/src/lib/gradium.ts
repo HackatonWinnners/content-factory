@@ -3,11 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { env } from "@content-factory/env/server";
 
-// TODO(plan): verify endpoint + voice id against current Gradium docs.
-// Documented endpoint pattern at time of writing: POST https://api.gradium.ai/v1/tts
-// with Authorization: Bearer <key>, JSON body { text, voice_id, format }, returns audio/mpeg bytes.
-const GRADIUM_TTS_URL = "https://api.gradium.ai/v1/tts";
-const DEFAULT_VOICE_ID = "gradium-male-neutral";
+// Gradium TTS POST endpoint per https://docs.gradium.ai/api-reference/openapi.json
+// Auth header is `x-api-key` (not Bearer). Default voice "YTpq7expH9539ERJ" is
+// Emma's voice from the public library. Output format wav (mp3 unsupported).
+const GRADIUM_TTS_URL = "https://api.gradium.ai/api/post/speech/tts";
+const DEFAULT_VOICE_ID = "YTpq7expH9539ERJ";
 const TIMEOUT_MS = 60_000;
 
 export interface SynthesizeArgs {
@@ -34,12 +34,13 @@ export async function synthesizeVoice({
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
-				authorization: `Bearer ${env.GRADIUM_API_KEY}`,
+				"x-api-key": env.GRADIUM_API_KEY,
 			},
 			body: JSON.stringify({
 				text,
 				voice_id: voiceId ?? DEFAULT_VOICE_ID,
-				format: "mp3",
+				output_format: "wav",
+				only_audio: true,
 			}),
 			signal: controller.signal,
 		});
@@ -60,7 +61,7 @@ export async function synthesizeVoice({
 	}
 
 	const buf = Buffer.from(await res.arrayBuffer());
-	const audioPath = path.join(os.tmpdir(), `cf-${jobId}-voice.mp3`);
+	const audioPath = path.join(os.tmpdir(), `cf-${jobId}-voice.wav`);
 	await writeFile(audioPath, buf);
 	return { audioPath };
 }

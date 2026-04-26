@@ -190,9 +190,9 @@ Dependencies (no new top-level deps):
 
 **Files:** none (Playwright + manual)
 
-- [ ] With `pnpm dev` running (web + server), walk full flow via Playwright: `/` → `Set up your brand` → fill form → save → `/source` → submit `https://github.com/honojs/hono` → `/thinking` (watch progress) → `/result` (video plays) → click `Generate voiceover` (audio plays). Save `.screenshots/07a-thinking-final.png` and `.screenshots/07b-result-with-audio.png`.
-- [ ] `browser_console_messages` snapshot — must be free of React/hydration errors across the full flow.
-- [ ] If any external API fails during smoke, capture failure, fix or stub, re-run end to end before Task 12.
+- [x] With `pnpm dev` running (web + server), walk full flow via Playwright: `/` → `Set up your brand` → fill form → save → `/source` → submit `https://github.com/honojs/hono` → `/thinking` (watch progress) → `/result` (video plays) → click `Generate voiceover` (audio plays). Save `.screenshots/07a-thinking-final.png` and `.screenshots/07b-result-with-audio.png`.
+- [x] `browser_console_messages` snapshot — must be free of React/hydration errors across the full flow.
+- [x] If any external API fails during smoke, capture failure, fix or stub, re-run end to end before Task 12. (Gradium TTS URL/headers were wrong; fixed `apps/server/src/lib/gradium.ts` to use `POST https://api.gradium.ai/api/post/speech/tts` with `x-api-key` header, default voice `YTpq7expH9539ERJ`, `output_format: "wav"`, `only_audio: true`. Audio mime type updated to `audio/wav` in `routes/video-jobs.ts`. Re-ran full flow end-to-end successfully.)
 
 ### Task 12: Aikido scan + README + finalize plan
 
