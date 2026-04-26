@@ -81,21 +81,27 @@ export function SourceRightPanel({
 
 			{/* Format */}
 			<Card>
-				<TitleRow title="Format" />
-				<div className="mt-2 flex flex-col gap-2">
+				<TitleRow title="Format">
+					<span className="mono inline-flex items-center rounded-[3px] border border-[var(--color-border)] px-1.5 py-[1px] text-[10px] text-[var(--color-text-dim)] uppercase tracking-[0.08em]">
+						soon
+					</span>
+				</TitleRow>
+				<div className="mt-2 flex flex-col gap-2 opacity-50">
 					<FormatOption
 						value="vertical"
 						selected={format === "vertical"}
-						onSelect={onFormatChange}
+						onSelect={() => {}}
 						label="Vertical · 9:16"
-						sub="For Twitter, TikTok, Reels"
+						sub="Always — every render is 1080×1920 today"
+						disabled
 					/>
 					<FormatOption
 						value="horizontal"
-						selected={format === "horizontal"}
-						onSelect={onFormatChange}
+						selected={false}
+						onSelect={() => {}}
 						label="Horizontal · 16:9"
-						sub="For YouTube, blog embeds"
+						sub="Coming soon"
+						disabled
 					/>
 				</div>
 			</Card>
@@ -200,21 +206,26 @@ function FormatOption({
 	onSelect,
 	label,
 	sub,
+	disabled,
 }: {
 	value: Format;
 	selected: boolean;
 	onSelect: (v: Format) => void;
 	label: string;
 	sub: string;
+	disabled?: boolean;
 }) {
 	return (
 		<button
 			type="button"
-			onClick={() => onSelect(value)}
-			className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-[background-color,border-color] duration-[120ms] ${
-				selected
-					? "border-[rgba(229,38,124,0.45)] bg-[var(--color-magenta-bg)]"
-					: "border-[var(--color-border)] bg-transparent hover:border-[var(--color-border-strong)]"
+			onClick={() => !disabled && onSelect(value)}
+			disabled={disabled}
+			className={`flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-[background-color,border-color] duration-[120ms] ${
+				disabled
+					? "cursor-not-allowed border-[var(--color-border)] bg-transparent"
+					: selected
+						? "cursor-pointer border-[rgba(229,38,124,0.45)] bg-[var(--color-magenta-bg)]"
+						: "cursor-pointer border-[var(--color-border)] bg-transparent hover:border-[var(--color-border-strong)]"
 			}`}
 		>
 			<FormatPreview kind={value} />
