@@ -1,0 +1,102 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "3859974d8b86",
+  "session_id": "59663164-bb96-4ede-a1f3-183c90dc5e8b",
+  "strategy": "manual-commit",
+  "created_at": "2026-04-26T10:10:10.06899Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".gitignore",
+    "apps/server/src/lib/gradium.ts",
+    "apps/server/src/lib/jobs.ts",
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/web/src/app/result/_components/video-card.tsx",
+    "apps/web/src/app/result/_components/voiceover-button.tsx",
+    "packages/agent/src/schemas.ts",
+    "packages/agent/src/script.ts",
+    "packages/composer/src/compositions/script-video.tsx"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-4-7[1m]",
+  "turn_id": "675d0862076c",
+  "token_usage": {
+    "input_tokens": 90,
+    "cache_creation_tokens": 185214,
+    "cache_read_tokens": 4736736,
+    "output_tokens": 32473,
+    "api_call_count": 60
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-04-26T10:10:10.062318Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 129,
+    "human_removed": 370,
+    "total_committed": 0,
+    "total_lines_changed": 500,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1219,
+      "user_lines_removed": 499,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".gitignore": 1,
+        "apps/server/src/lib/audio.ts": 39,
+        "apps/server/src/lib/gradium.ts": 28,
+        "apps/server/src/lib/jobs.ts": 18,
+        "apps/server/src/routes/video-jobs.ts": 189,
+        "packages/agent/src/schemas.ts": 74,
+        "packages/agent/src/script.ts": 60,
+        "packages/composer/public/music/LICENSE.md": 8,
+        "packages/composer/src/compositions/script-video.tsx": 802
+      },
+      "user_removed_per_file": {
+        "apps/server/src/lib/gradium.ts": 5,
+        "apps/server/src/routes/video-jobs.ts": 94,
+        "apps/web/src/app/result/_components/video-card.tsx": 4,
+        "apps/web/src/app/result/_components/voiceover-button.tsx": 170,
+        "packages/agent/src/schemas.ts": 6,
+        "packages/agent/src/script.ts": 45,
+        "packages/composer/src/compositions/script-video.tsx": 175
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1219,
+      "agent_lines_removed": 499
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1219,
+      "agent_lines_removed": 499
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1219,
+      "agent_lines_removed": 499
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1219,
+      "agent_lines_removed": 499
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.5.6",
+  "checkpoint_id": "3859974d8b86",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".gitignore",
+    "apps/server/src/lib/gradium.ts",
+    "apps/server/src/lib/jobs.ts",
+    "apps/server/src/routes/video-jobs.ts",
+    "apps/web/src/app/result/_components/video-card.tsx",
+    "apps/web/src/app/result/_components/voiceover-button.tsx",
+    "packages/agent/src/schemas.ts",
+    "packages/agent/src/script.ts",
+    "packages/composer/src/compositions/script-video.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/38/59974d8b86/0/metadata.json",
+      "transcript": "/38/59974d8b86/0/full.jsonl",
+      "content_hash": "/38/59974d8b86/0/content_hash.txt",
+      "prompt": "/38/59974d8b86/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 90,
+    "cache_creation_tokens": 185214,
+    "cache_read_tokens": 4736736,
+    "output_tokens": 32473,
+    "api_call_count": 60
+  }
+}
