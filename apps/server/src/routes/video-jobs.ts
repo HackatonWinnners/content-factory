@@ -188,6 +188,7 @@ videoJobRoutes.get("/:id/audio", (c) => {
 		headers: {
 			"content-type": "audio/wav",
 			"content-length": String(size),
+			"cache-control": "no-store",
 		},
 	});
 });
