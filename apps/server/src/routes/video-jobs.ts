@@ -35,20 +35,34 @@ const CreateJobSchema = z.object({
 	brand: BrandProfileSchema,
 });
 
+// Walk up from wherever this module is loaded (src/routes in dev,
+// apps/server/dist in production after tsdown) until we find the workspace
+// `packages/composer/` dir. Hardcoded relative paths break after bundling.
+function resolveComposerSubdir(sub: string): string {
+	let dir = path.dirname(fileURLToPath(import.meta.url));
+	for (let i = 0; i < 12; i++) {
+		const candidate = path.join(dir, "packages", "composer", sub);
+		if (existsSync(candidate)) return candidate;
+		const parent = path.dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+	// Last-ditch: return the expected path even if it doesn't exist yet
+	// (mkdir at runtime will create it).
+	return path.resolve(
+		path.dirname(fileURLToPath(import.meta.url)),
+		"../../../../packages/composer",
+		sub,
+	);
+}
+
 // Composer's public/ folder. We write per-job audio files here before rendering
-// so Remotion's bundler picks them up via staticFile(). Resolved relative to
-// this source file at runtime.
-const COMPOSER_PUBLIC_DIR = path.resolve(
-	path.dirname(fileURLToPath(import.meta.url)),
-	"../../../../packages/composer/public",
-);
+// so Remotion's bundler picks them up via staticFile().
+const COMPOSER_PUBLIC_DIR = resolveComposerSubdir("public");
 
 // Music library lives OUTSIDE composer/public/ so it doesn't get bundled into
 // the Remotion serve bundle (each render copies only the chosen track in).
-const MUSIC_LIBRARY_DIR = path.resolve(
-	path.dirname(fileURLToPath(import.meta.url)),
-	"../../../../packages/composer/music-library",
-);
+const MUSIC_LIBRARY_DIR = resolveComposerSubdir("music-library");
 const MUSIC_TRACKS = [
 	"lofi.mp3",
 	"cinematic.mp3",
