@@ -1,0 +1,25 @@
+go to server ssh -i /Users/madvil2/Downloads/ssh-key-2026-03-19.key opc@92.5.84.57
+and deploy this app there
+i think it is better to use dokku but u need to check
+and install everything we need on the server
+hack.042067.xyz will be the domain
+and lmk IPv4 address so i can add a dns record
+
+---
+
+Coolify вроде тоже не поддерживает
+
+---
+
+не, давай тогда на этот сервер
+ssh madvil2@042067.xyz
+пароль от судо G60Uh2nY! 
+чекни там, там докку уже стоит
+
+---
+
+ssh madvil2@162.55.50.161 может этот сервер лучше?
+
+---
+
+создал записи в днс, давай деплой
