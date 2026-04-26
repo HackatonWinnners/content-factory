@@ -13,7 +13,7 @@ export default function AIPage() {
 	const [input, setInput] = useState("");
 	const { messages, sendMessage, status } = useChat({
 		transport: new DefaultChatTransport({
-			api: `${env.NEXT_PUBLIC_SERVER_URL}/ai`,
+			api: `${env.NEXT_PUBLIC_SERVER_URL}/api/v1/ai`,
 		}),
 	});
 

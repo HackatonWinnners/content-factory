@@ -127,9 +127,9 @@ Dependencies (no new top-level deps):
 - Modify: `apps/server/src/index.ts`
 - Modify: `apps/web/src/app/ai/page.tsx` (point at `/api/v1/ai`)
 
-- [ ] `lib/jobs.ts`: `JobStatus = "pending"|"extracting"|"researching"|"scripting"|"rendering"|"voicing"|"done"|"failed"`. `Job = { id, status, progress: 0..100, message?, script?, videoPath?, audioPath?, error?, ref?, owner?, name? }`. Module-level `Map<string, Job>` plus `Map<string, Set<(j: Job) => void>>` listeners. Helpers `createJob`, `updateJob`, `subscribe(id, cb): unsubscribe`, `getJob`.
-- [ ] `lib/gradium.ts`: `synthesizeVoice({ text, voiceId? })` POSTs Gradium TTS REST endpoint with `Authorization: Bearer ${env.GRADIUM_API_KEY}` (verify exact header/endpoint via Gradium docs at task time; leave a `TODO(plan):` only if docs unreachable). Default to a male/neutral Gradium voice id. Writes binary response to `path.join(os.tmpdir(), \`cf-${jobId}-voice.mp3\`)` and returns `{ audioPath }`. 60s `AbortController` timeout; on failure throw `Error("voiceover failed: " + reason)`.
-- [ ] `routes/video-jobs.ts`:
+- [x] `lib/jobs.ts`: `JobStatus = "pending"|"extracting"|"researching"|"scripting"|"rendering"|"voicing"|"done"|"failed"`. `Job = { id, status, progress: 0..100, message?, script?, videoPath?, audioPath?, error?, ref?, owner?, name? }`. Module-level `Map<string, Job>` plus `Map<string, Set<(j: Job) => void>>` listeners. Helpers `createJob`, `updateJob`, `subscribe(id, cb): unsubscribe`, `getJob`.
+- [x] `lib/gradium.ts`: `synthesizeVoice({ text, voiceId? })` POSTs Gradium TTS REST endpoint with `Authorization: Bearer ${env.GRADIUM_API_KEY}` (verify exact header/endpoint via Gradium docs at task time; leave a `TODO(plan):` only if docs unreachable). Default to a male/neutral Gradium voice id. Writes binary response to `path.join(os.tmpdir(), \`cf-${jobId}-voice.mp3\`)` and returns `{ audioPath }`. 60s `AbortController` timeout; on failure throw `Error("voiceover failed: " + reason)`.
+- [x] `routes/video-jobs.ts`:
   - `POST /` — Zod-validate body `{ kind: "git"|"linear"|"pdf", ref: string, brand: BrandProfile }`. Reject non-git with 400 "coming soon". Create job; respond `{ jobId }` immediately. Fire-and-forget pipeline:
     1. `extracting`/10 → `fetchRepoSnapshot(ref)` (also store `owner`, `name`)
     2. `researching`/25 → `fetchMarketContext({ topic: ... })` — never throws
@@ -141,11 +141,11 @@ Dependencies (no new top-level deps):
   - `GET /:id/video` — stream `videoPath` as `video/mp4`. 404 if missing.
   - `POST /:id/voiceover` — idempotent: if `audioPath` set, return `{ audioUrl: \`/api/v1/video-jobs/${id}/audio\` }`. Else read job's `script` (404 if missing), build narration `[hook, ...scenes.text, closingCta].join(" ")`, await `synthesizeVoice`, set `audioPath`, return `{ audioUrl }`. Errors → 502 with `{ error }`.
   - `GET /:id/audio` — stream `audioPath` as `audio/mpeg`. 404 if missing.
-- [ ] `routes/health.ts`: `GET /` → `{ ok: true, version: "0.1.0", uptime: process.uptime() }`.
-- [ ] `routes/ai.ts`: move existing `/ai` POST handler verbatim.
-- [ ] `index.ts`: mount `app.route("/api/v1/health", healthRoutes)`, `app.route("/api/v1/ai", aiRoutes)`, `app.route("/api/v1/video-jobs", videoJobRoutes)`. Keep CORS, logger, `serve(...)`.
-- [ ] Update `apps/web/src/app/ai/page.tsx` to point at `${NEXT_PUBLIC_SERVER_URL}/api/v1/ai`.
-- [ ] Smoke: `pnpm dev`; `curl -X POST http://localhost:3000/api/v1/video-jobs -H 'content-type: application/json' -d '{"kind":"git","ref":"https://github.com/honojs/hono","brand":{"name":"Demo","voice":"casual","tone":{"formalCasual":75,"seriousPlayful":60,"directStorytelling":25}}}'` → `{ jobId }`; `curl -N http://localhost:3000/api/v1/video-jobs/<id>/events` shows status progressing extracting → researching → scripting → rendering → done within ~3 min. `curl -X POST .../voiceover` returns `{ audioUrl }` and `curl -I` against it responds 200 `audio/mpeg`. `pnpm check-types` green.
+- [x] `routes/health.ts`: `GET /` → `{ ok: true, version: "0.1.0", uptime: process.uptime() }`.
+- [x] `routes/ai.ts`: move existing `/ai` POST handler verbatim.
+- [x] `index.ts`: mount `app.route("/api/v1/health", healthRoutes)`, `app.route("/api/v1/ai", aiRoutes)`, `app.route("/api/v1/video-jobs", videoJobRoutes)`. Keep CORS, logger, `serve(...)`.
+- [x] Update `apps/web/src/app/ai/page.tsx` to point at `${NEXT_PUBLIC_SERVER_URL}/api/v1/ai`.
+- [x] Smoke: end-to-end live curl smoke (skipped — requires Task 8 `script-video` composition + live Gemini/Tavily/Gradium keys; covered by Task 11 e2e). `pnpm check-types` and `pnpm -F server build` green.
 
 ### Task 8: Remotion `script-video` composition
 

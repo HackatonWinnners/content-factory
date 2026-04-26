@@ -84,6 +84,9 @@ importers:
       '@content-factory/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@content-factory/composer':
+        specifier: workspace:*
+        version: link:../../packages/composer
       '@content-factory/db':
         specifier: workspace:*
         version: link:../../packages/db

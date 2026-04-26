@@ -1,10 +1,11 @@
-import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { google } from "@ai-sdk/google";
 import { env } from "@content-factory/env/server";
-import { convertToModelMessages, streamText, wrapLanguageModel } from "ai";
+import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { aiRoutes } from "./routes/ai";
+import { healthRoutes } from "./routes/health";
+import { videoJobRoutes } from "./routes/video-jobs";
 
 const app = new Hono();
 
@@ -17,26 +18,11 @@ app.use(
 	}),
 );
 
-app.post("/ai", async (c) => {
-	const body = await c.req.json();
-	const uiMessages = body.messages || [];
-	const model = wrapLanguageModel({
-		model: google("gemini-2.5-flash"),
-		middleware: devToolsMiddleware(),
-	});
-	const result = streamText({
-		model,
-		messages: await convertToModelMessages(uiMessages),
-	});
+app.route("/api/v1/health", healthRoutes);
+app.route("/api/v1/ai", aiRoutes);
+app.route("/api/v1/video-jobs", videoJobRoutes);
 
-	return result.toUIMessageStreamResponse();
-});
-
-app.get("/", (c) => {
-	return c.text("OK");
-});
-
-import { serve } from "@hono/node-server";
+app.get("/", (c) => c.text("OK"));
 
 serve(
 	{
