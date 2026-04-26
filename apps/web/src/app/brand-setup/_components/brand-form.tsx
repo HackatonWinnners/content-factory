@@ -2,13 +2,16 @@
 
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import type { ChangeEvent } from "react";
+import { type ChangeEvent, useState } from "react";
 
 import {
 	type BrandProfile,
 	defaultBrandProfile,
 	saveBrandProfile,
 } from "@/lib/brand-profile";
+
+const NAME_MAX = 120;
+const VOICE_MAX = 2000;
 
 type ToneKey = keyof BrandProfile["tone"];
 
@@ -89,13 +92,16 @@ function SliderRow({
 
 export function BrandForm({ profile, onChange }: Props) {
 	const router = useRouter();
+	const [saveError, setSaveError] = useState<string | null>(null);
 
 	function setName(name: string) {
-		onChange({ ...profile, name });
+		if (saveError) setSaveError(null);
+		onChange({ ...profile, name: name.slice(0, NAME_MAX) });
 	}
 
 	function setVoice(voice: string) {
-		onChange({ ...profile, voice });
+		if (saveError) setSaveError(null);
+		onChange({ ...profile, voice: voice.slice(0, VOICE_MAX) });
 	}
 
 	function setTone(key: ToneKey, value: number) {
@@ -107,13 +113,23 @@ export function BrandForm({ profile, onChange }: Props) {
 
 	function handleSave() {
 		if (!canSave) return;
-		saveBrandProfile(profile);
-		router.push("/source" as Route);
+		try {
+			saveBrandProfile(profile);
+			router.push("/source" as Route);
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : "Could not save brand";
+			setSaveError(msg);
+		}
 	}
 
 	function handleSkip() {
-		saveBrandProfile(defaultBrandProfile());
-		router.push("/source" as Route);
+		try {
+			saveBrandProfile(defaultBrandProfile());
+			router.push("/source" as Route);
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : "Could not save brand";
+			setSaveError(msg);
+		}
 	}
 
 	return (
@@ -135,6 +151,7 @@ export function BrandForm({ profile, onChange }: Props) {
 					</label>
 					<input
 						id="brand-name"
+						maxLength={NAME_MAX}
 						className="h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-elev-1)] px-[14px] text-[14px] text-[var(--color-text)] outline-none transition-[border-color,background-color] duration-[120ms] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-elev-2)]"
 						value={profile.name}
 						onChange={(e) => setName(e.target.value)}
@@ -155,6 +172,7 @@ export function BrandForm({ profile, onChange }: Props) {
 					<textarea
 						id="brand-voice"
 						rows={5}
+						maxLength={VOICE_MAX}
 						className="min-h-[140px] w-full resize-y rounded-md border border-[var(--color-border)] bg-[var(--color-elev-1)] px-[14px] py-3 text-[14px] text-[var(--color-text)] leading-[1.55] outline-none transition-[border-color,background-color] duration-[120ms] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-elev-2)]"
 						value={profile.voice}
 						onChange={(e) => setVoice(e.target.value)}
@@ -197,22 +215,32 @@ export function BrandForm({ profile, onChange }: Props) {
 				</div>
 			</div>
 
-			<div className="mt-10 flex items-center gap-4">
-				<button
-					type="button"
-					onClick={handleSave}
-					disabled={!canSave}
-					className="inline-flex h-11 w-[240px] items-center justify-center gap-2 rounded-md border border-[var(--color-magenta)] bg-[var(--color-magenta)] px-4 font-medium text-[14px] text-white transition-[background-color,transform] duration-[120ms] hover:bg-[#ED2F86] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-magenta)]"
-				>
-					Save brand profile
-				</button>
-				<button
-					type="button"
-					onClick={handleSkip}
-					className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--color-border)] bg-transparent px-[18px] font-medium text-[14px] text-[var(--color-text)] transition-[background-color,border-color,transform] duration-[120ms] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-elev-1)] active:translate-y-[1px]"
-				>
-					Skip for now
-				</button>
+			<div className="mt-10 flex flex-col gap-3">
+				<div className="flex items-center gap-4">
+					<button
+						type="button"
+						onClick={handleSave}
+						disabled={!canSave}
+						className="inline-flex h-11 w-[240px] items-center justify-center gap-2 rounded-md border border-[var(--color-magenta)] bg-[var(--color-magenta)] px-4 font-medium text-[14px] text-white transition-[background-color,transform] duration-[120ms] hover:bg-[#ED2F86] active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[var(--color-magenta)]"
+					>
+						Save brand profile
+					</button>
+					<button
+						type="button"
+						onClick={handleSkip}
+						className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--color-border)] bg-transparent px-[18px] font-medium text-[14px] text-[var(--color-text)] transition-[background-color,border-color,transform] duration-[120ms] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-elev-1)] active:translate-y-[1px]"
+					>
+						Skip for now
+					</button>
+				</div>
+				{saveError ? (
+					<div
+						role="alert"
+						className="text-[12px] text-[var(--color-red)] leading-[1.4]"
+					>
+						{saveError}
+					</div>
+				) : null}
 			</div>
 		</div>
 	);

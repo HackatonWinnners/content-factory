@@ -4,8 +4,12 @@ import type { BrandProfile, MarketContext, RepoSnapshot } from "./schemas";
 import { type VideoScript, VideoScriptSchema } from "./schemas";
 
 const MODEL_ID = "gemini-2.5-flash";
-const MIN_TOTAL_SEC = 30;
-const MAX_TOTAL_SEC = 60;
+// Composer adds a hook (2.5s) + closing (2s) on top of the scene timeline.
+// Keep these in sync with packages/composer/src/compositions/script-video.tsx.
+const COMPOSER_PADDING_SEC = 4.5;
+const MIN_TOTAL_SEC = 30 - COMPOSER_PADDING_SEC;
+const MAX_TOTAL_SEC = 60 - COMPOSER_PADDING_SEC;
+const GEMINI_TIMEOUT_MS = 60_000;
 
 type Args = {
 	snapshot: RepoSnapshot;
@@ -31,12 +35,12 @@ export async function writeScriptFromRepo({
 
 	const retryUser = `${user}\n\nIMPORTANT: previous draft totalled ${totalSeconds(
 		first,
-	)}s. The sum of all scenes' durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC}.`;
+	)}s of scenes. The sum of all scenes' durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC} seconds (we add ${COMPOSER_PADDING_SEC}s of branding so final video is 30-60s).`;
 	const second = await runOnce({ system, user: retryUser });
 	const secs = totalSeconds(second);
 	if (secs < MIN_TOTAL_SEC || secs > MAX_TOTAL_SEC) {
 		console.warn(
-			`[agent.script] retry still out-of-bounds: ${secs}s (target ${MIN_TOTAL_SEC}-${MAX_TOTAL_SEC}s)`,
+			`[agent.script] retry still out-of-bounds: ${secs}s of scenes (target ${MIN_TOTAL_SEC}-${MAX_TOTAL_SEC}s)`,
 		);
 	}
 	return second;
@@ -49,16 +53,30 @@ async function runOnce({
 	system: string;
 	user: string;
 }): Promise<VideoScript> {
-	const { object } = await generateObject({
-		model: google(MODEL_ID),
-		schema: VideoScriptSchema,
-		schemaName: "VideoScript",
-		schemaDescription:
-			"Vertical short-form video script with hook + scenes + CTA",
-		system,
-		prompt: user,
-	});
-	return object;
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+	try {
+		const { object } = await generateObject({
+			model: google(MODEL_ID),
+			schema: VideoScriptSchema,
+			schemaName: "VideoScript",
+			schemaDescription:
+				"Vertical short-form video script with hook + scenes + CTA",
+			system,
+			prompt: user,
+			abortSignal: controller.signal,
+		});
+		return object;
+	} catch (e) {
+		if (controller.signal.aborted) {
+			throw new Error(
+				`gemini script generation timed out after ${GEMINI_TIMEOUT_MS}ms`,
+			);
+		}
+		throw e;
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 function totalSeconds(script: VideoScript): number {
@@ -73,7 +91,7 @@ function systemPrompt(brand: BrandProfile): string {
 		`Tone adjectives: ${tone}.`,
 		brand.rules?.dos?.length ? `Do: ${brand.rules.dos.join("; ")}.` : "",
 		brand.rules?.donts?.length ? `Don't: ${brand.rules.donts.join("; ")}.` : "",
-		"Output a 30-60 second vertical short-form script: a punchy hook, 4-8 scenes (each 2-8s), and a closing CTA.",
+		`Output a vertical short-form script: a punchy hook, 4-8 scenes (each 2-8s), and a closing CTA. The sum of scene durationSec MUST be between ${MIN_TOTAL_SEC} and ${MAX_TOTAL_SEC} (the renderer adds ${COMPOSER_PADDING_SEC}s of branding so the final video is 30-60s).`,
 		"Every scene needs concrete user-facing facts pulled from the source. No vague filler.",
 	]
 		.filter(Boolean)

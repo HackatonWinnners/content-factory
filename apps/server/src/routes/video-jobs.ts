@@ -35,13 +35,23 @@ videoJobRoutes.post("/", async (c) => {
 		return c.json({ error: "coming soon" }, 400);
 	}
 
+	let parsedRepo: ReturnType<typeof parseRepoUrl>;
+	try {
+		parsedRepo = parseRepoUrl(ref);
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		return c.json({ error: msg }, 400);
+	}
+
 	const job = createJob({
 		status: "pending",
 		progress: 0,
 		ref,
+		owner: parsedRepo.owner,
+		name: parsedRepo.name,
 	});
 
-	void runPipeline(job.id, ref, brand).catch((e) => {
+	void runPipeline(job.id, ref, parsedRepo, brand).catch((e) => {
 		const msg = e instanceof Error ? e.message : String(e);
 		updateJob(job.id, { status: "failed", error: msg });
 	});
@@ -52,11 +62,12 @@ videoJobRoutes.post("/", async (c) => {
 videoJobRoutes.get("/:id", (c) => {
 	const job = getJob(c.req.param("id"));
 	if (!job) return c.json({ error: "not found" }, 404);
-	const { videoPath, audioPath, ...publicJob } = job;
+	const { videoPath, audioPath, script, ...publicJob } = job;
 	return c.json({
 		...publicJob,
 		hasVideo: Boolean(videoPath),
 		hasAudio: Boolean(audioPath),
+		hasScript: Boolean(script),
 	});
 });
 
@@ -69,11 +80,12 @@ videoJobRoutes.get("/:id/events", (c) => {
 		let closed = false;
 
 		const toPublic = (job: Job) => {
-			const { videoPath, audioPath, ...rest } = job;
+			const { videoPath, audioPath, script, ...rest } = job;
 			return {
 				...rest,
 				hasVideo: Boolean(videoPath),
 				hasAudio: Boolean(audioPath),
+				hasScript: Boolean(script),
 			};
 		};
 
@@ -196,15 +208,14 @@ videoJobRoutes.get("/:id/audio", (c) => {
 async function runPipeline(
 	jobId: string,
 	ref: string,
+	parsedRepo: ReturnType<typeof parseRepoUrl>,
 	brand: z.infer<typeof BrandProfileSchema>,
 ): Promise<void> {
-	const parsed = parseRepoUrl(ref);
-
 	updateJob(jobId, {
 		status: "extracting",
 		progress: 10,
-		owner: parsed.owner,
-		name: parsed.name,
+		owner: parsedRepo.owner,
+		name: parsedRepo.name,
 	});
 	const snapshot = await fetchRepoSnapshot(ref);
 
